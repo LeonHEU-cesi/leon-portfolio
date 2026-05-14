@@ -245,3 +245,26 @@ Tests validés :
 - `npm run build` → succès
 
 ---
+
+### Issue #26 — [1.6] Section "Projets phares" sur l'accueil
+
+Section "Projets phares" affichée sous le Hero. 3 cartes projet avec données mock pour la V1 (la query Prisma viendra Sprint 2 quand Postgres sera up en local). Animation hover Framer Motion subtile (lift + scale 1.01).
+
+- `lib/data/featured-projects.ts` : type `FeaturedProject` + 3 projets en dur (leon-portfolio, CESIZen, Tasknest concept)
+- `components/sections/FeaturedProjects.tsx` (server) : titre de section + grid responsive (1/2/3 cols) + CTA "Voir tous les projets" → /projets
+- `components/sections/FeaturedProjectCard.tsx` (client) : carte avec image gradient OKLCH, titre serif, summary, tags chips, liens Code/Démo. Framer Motion `whileHover={{ y: -4, scale: 1.01 }}` désactivé si `usePrefersReducedMotion`
+- `app/page.tsx` : ajout de `<FeaturedProjects />` sous `<HeroAnimated />`
+- `tests/unit/FeaturedProjects.test.tsx` (3 tests) : titre + CTA, 3 articles, contenu d'un projet (tags + liens)
+
+Note Sprint 2 : remplacer le mock par `prisma.project.findMany({ where: { isFeatured: true, status: 'PUBLISHED' }, take: 3, orderBy: { createdAt: 'desc' } })` côté Server Component, avec try/catch + fallback mock.
+
+Couvre :
+- US-VI-02 (Section "Projets phares" sur l'accueil)
+
+Tests validés :
+- `npm run test:run` → **29 tests passants** (26 précédents + 3 nouveaux)
+- `npm run lint` → 0 warning
+- `npm run typecheck` → 0 erreur
+- `npm run build` → succès
+
+---
