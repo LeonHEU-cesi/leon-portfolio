@@ -1,0 +1,99 @@
+# Dépendances
+node_modules/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Build
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+lerna-debug.log*
+
+# Env / Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.crt
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+.history/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Tests / Coverage
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+.lighthouseci/
+
+# Storybook
+storybook-static/
+
+# Prisma
+web/prisma/migrations/dev/
+
+# Uploads dev
+web/public/uploads/
+
+# Expo / EAS
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/*.jks
+mobile/*.p8
+mobile/*.p12
+mobile/*.key
+mobile/*.mobileprovision
+mobile/*.orig.*
+mobile/google-services.json
+mobile/GoogleService-Info.plist
+
+# Cache
+.cache/
+.turbo/
+.swc/
+
+# Local Claude Code config
+.claude/
+
+# Mémoire persistante Claude (interne)
+memory/
+
+# Docs internes éphémères
+Docs/claude/Sprint docs/.tmp/
+
+# Backups
+*.bak
+*.sql.gz
+backup/

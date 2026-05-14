@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web-tests:
+    name: Web (lint + typecheck + Vitest)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: leonportfolio_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci || echo "Sprint 0: web/ pas encore initialisé"
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Typecheck
+        run: npm run typecheck --if-present || npx tsc --noEmit --skipLibCheck
+
+      - name: Prisma generate
+        run: npx prisma generate --if-present || true
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/leonportfolio_test
+
+      - name: Vitest run
+        run: npm run test:run --if-present
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/leonportfolio_test
+
+  web-e2e-lighthouse:
+    name: Web (E2E Playwright + Lighthouse CI)
+    runs-on: ubuntu-latest
+    needs: web-tests
+    if: github.event_name == 'pull_request'
+
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install
+        run: npm ci || echo "Sprint 0: web/ pas encore initialisé"
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium || true
+
+      - name: Build
+        run: npm run build --if-present
+
+      - name: Playwright E2E
+        run: npm run test:e2e --if-present
+        continue-on-error: true
+
+      - name: Lighthouse CI
+        run: npm run lhci --if-present
+        continue-on-error: true
+
+  mobile-checks:
+    name: Mobile (expo-doctor + tsc + Jest)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install
+        run: npm ci || echo "Sprint 0: mobile/ pas encore initialisé"
+        continue-on-error: true
+
+      - name: Expo doctor
+        run: npx expo-doctor || true
+        continue-on-error: true
+
+      - name: Typecheck
+        run: npx tsc --noEmit --skipLibCheck || true
+        continue-on-error: true
+
+      - name: Jest
+        run: npm test --if-present
+        continue-on-error: true
