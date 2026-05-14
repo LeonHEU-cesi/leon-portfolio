@@ -82,3 +82,26 @@ Tests validés :
 - Direction cohérente avec les démos de compétence souhaitées (signal CV "design + tech")
 
 ---
+
+### Issue #11 — [0.11] Tokens design Tailwind v4 (palette, typo, espacement)
+
+Implémentation des tokens design dans `web/app/globals.css` selon la direction hybride A+C validée à l'issue #10. Quatre jeux de tokens (`editorial-light` par défaut, `editorial-dark`, `tech-dark` par défaut sur ces routes, `tech-light` option) avec couleurs en OKLCH, polices via `next/font/google`, custom variants Tailwind v4 (`dark`, `editorial`, `tech`).
+
+- `globals.css` : `@theme` partagé (radius, shadows, fonts variables CSS) + 4 variants `[data-mode]+[data-theme]` avec palettes OKLCH complètes
+- Custom variants Tailwind v4 : `dark` (data-theme=dark), `editorial` (data-mode=editorial), `tech` (data-mode=tech). Permet usages comme `dark:bg-foreground` ou `tech:font-mono`
+- `layout.tsx` :
+  - Chargement Fraunces (axes SOFT, WONK, opsz), Inter, Geist, Geist Mono via `next/font/google`
+  - Variables CSS exposées sur `<html>` : `--font-fraunces`, `--font-inter`, `--font-geist-sans`, `--font-geist-mono`
+  - `lang="fr"`, `data-mode="editorial"` et `data-theme="light"` par défaut (le `<ModeProvider>` de l'issue #12 ajustera dynamiquement)
+  - Metadata App Router : title template, description FR, authors, metadataBase via env `NEXT_PUBLIC_SITE_URL`
+- `prefers-reduced-motion: reduce` : toutes les transitions et animations désactivées (couvre US-VI-06)
+- `stories/Tokens.stories.tsx` : story Design System / Tokens avec 4 variants (Editorial Light / Editorial Dark / Tech Dark / Tech Light) — visualise palette, typo, radius
+- `eslint.config.mjs` : ajout des ignores `storybook-static/**`, `coverage/**`, `playwright-report/**`, `test-results/**`, `node_modules/.prisma/**` pour éviter le lint des fichiers générés
+
+Tests validés :
+- `npm run lint` → 0 warning (ignores OK)
+- `npm run typecheck` → 0 erreur
+- `npm run build` → succès (fonts téléchargées par next/font)
+- `npm run build-storybook` → succès (5 stories : Button, Header, Page, Configure, Tokens)
+
+---

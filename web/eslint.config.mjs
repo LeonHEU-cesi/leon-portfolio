@@ -15,8 +15,14 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Storybook + Prisma + coverage générés
+    "storybook-static/**",
+    "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
+    "node_modules/.prisma/**",
   ]),
-  ...storybook.configs["flat/recommended"]
+  ...storybook.configs["flat/recommended"],
 ]);
 
 export default eslintConfig;
