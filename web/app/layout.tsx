@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { Fraunces, Geist, Geist_Mono, Inter } from "next/font/google";
 
+import { Footer } from "@/components/layout/Footer";
+import { Header } from "@/components/layout/Header";
+import { ModeProvider } from "@/components/providers/ModeProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
+
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -47,7 +52,6 @@ export default function RootLayout({
     <html
       lang="fr"
       data-mode="editorial"
-      data-theme="light"
       className={[
         fraunces.variable,
         inter.variable,
@@ -58,7 +62,15 @@ export default function RootLayout({
       ].join(" ")}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ThemeProvider>
+          <ModeProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </ModeProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
