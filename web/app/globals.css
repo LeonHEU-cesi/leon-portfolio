@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Variants personnalisées : dark mode + modes contextuels
+   ------------------------------------------------------------
+   - dark      : actif quand <html data-theme="dark">
+   - editorial : actif sur landing / cv / about / contact
+   - tech      : actif sur projets / admin / blog (V2)
+============================================================ */
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+@custom-variant editorial (&:where([data-mode="editorial"], [data-mode="editorial"] *));
+@custom-variant tech (&:where([data-mode="tech"], [data-mode="tech"] *));
+
+/* ============================================================
+   Tokens partagés (radius, espacements, polices)
+   Direction visuelle hybride A+C — cf. Docs/.../design/direction-visuelle.md
+============================================================ */
+
+@theme {
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-fg);
+  --color-secondary: var(--secondary);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-fg);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-fg);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-geist-mono, ui-monospace, "JetBrains Mono", monospace);
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  --shadow-soft: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+  --shadow-medium: 0 8px 24px -4px rgb(0 0 0 / 0.12);
+  --shadow-glow: 0 0 32px -8px var(--primary);
+}
+
+/* ============================================================
+   Mode EDITORIAL — light (par défaut)
+   Inspiration NYT, Stripe Press. Serif Fraunces + Inter.
+============================================================ */
+
+:root,
+[data-mode="editorial"] {
+  --bg: oklch(0.97 0.02 80);
+  --fg: oklch(0.14 0 0);
+  --primary: oklch(0.30 0.10 30);
+  --primary-fg: oklch(0.97 0.02 80);
+  --secondary: oklch(0.52 0.05 60);
+  --muted: oklch(0.92 0.02 80);
+  --muted-fg: oklch(0.42 0.03 60);
+  --accent: oklch(0.55 0.15 30);
+  --accent-fg: oklch(0.97 0.02 80);
+  --destructive: oklch(0.50 0.18 25);
+  --border: oklch(0.88 0.02 80);
+  --ring: oklch(0.55 0.15 30);
+
+  --font-display: var(--font-fraunces, ui-serif, Georgia, serif);
+  --font-body: var(--font-inter, ui-sans-serif, system-ui, sans-serif);
+}
+
+/* Mode EDITORIAL — dark */
+[data-mode="editorial"][data-theme="dark"] {
+  --bg: oklch(0.10 0.01 60);
+  --fg: oklch(0.95 0.02 80);
+  --primary: oklch(0.80 0.10 70);
+  --primary-fg: oklch(0.10 0.01 60);
+  --secondary: oklch(0.65 0.05 60);
+  --muted: oklch(0.18 0.01 60);
+  --muted-fg: oklch(0.70 0.03 60);
+  --accent: oklch(0.65 0.15 30);
+  --accent-fg: oklch(0.10 0.01 60);
+  --destructive: oklch(0.55 0.18 25);
+  --border: oklch(0.22 0.01 60);
+  --ring: oklch(0.65 0.15 30);
+}
+
+/* ============================================================
+   Mode TECH — dark (par défaut sur /projets, /admin, /blog)
+   Inspiration Linear, Vercel, Raycast. Geist + Geist Mono.
+============================================================ */
+
+[data-mode="tech"] {
+  --bg: oklch(0.05 0 0);
+  --fg: oklch(0.93 0 0);
+  --primary: oklch(0.78 0.15 220);
+  --primary-fg: oklch(0.05 0 0);
+  --secondary: oklch(0.63 0 0);
+  --muted: oklch(0.10 0 0);
+  --muted-fg: oklch(0.70 0 0);
+  --accent: oklch(0.70 0.14 290);
+  --accent-fg: oklch(0.05 0 0);
+  --destructive: oklch(0.65 0.20 25);
+  --border: oklch(0.15 0 0);
+  --ring: oklch(0.78 0.15 220);
+
+  --font-display: var(--font-geist-sans, ui-sans-serif, system-ui, sans-serif);
+  --font-body: var(--font-geist-sans, ui-sans-serif, system-ui, sans-serif);
+}
+
+/* Mode TECH — light (option) */
+[data-mode="tech"][data-theme="light"] {
+  --bg: oklch(0.98 0 0);
+  --fg: oklch(0.10 0 0);
+  --primary: oklch(0.55 0.13 220);
+  --primary-fg: oklch(0.98 0 0);
+  --secondary: oklch(0.40 0 0);
+  --muted: oklch(0.95 0 0);
+  --muted-fg: oklch(0.45 0 0);
+  --accent: oklch(0.50 0.18 290);
+  --accent-fg: oklch(0.98 0 0);
+  --border: oklch(0.90 0 0);
+  --ring: oklch(0.55 0.13 220);
+}
+
+/* ============================================================
+   Base body & smooth transitions
+============================================================ */
+
+@layer base {
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    transition: background-color 200ms ease, color 200ms ease;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+  }
+
+  /* Respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}
