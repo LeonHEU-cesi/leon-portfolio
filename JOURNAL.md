@@ -105,3 +105,25 @@ Tests validés :
 - `npm run build-storybook` → succès (5 stories : Button, Header, Page, Configure, Tokens)
 
 ---
+
+### Issue #12 — [0.12] Layout root + composants Header / Footer minimaux
+
+Pose des composants de layout fondamentaux. Le hero animé GSAP arrive au Sprint 1 (issue 1.4) ; ici on installe la coquille.
+
+- **`<ThemeProvider>`** (`components/providers/`) : wrapper `next-themes` avec `attribute="data-theme"`, defaultTheme `system`, enableSystem. Permet le toggle light/dark/system persistant via cookie.
+- **`<ModeProvider>`** (`components/providers/`) : composant client lisant `usePathname()` et settant `data-mode="editorial"` ou `data-mode="tech"` sur `<html>` selon route. Prefixes tech : `/projets`, `/admin`, `/blog`.
+- **`<Header>`** (`components/layout/`) : sticky top, blur backdrop, nav avec 5 items (Accueil / Projets / CV / À propos / Contact), indicateur de page active (underline cyan/brun selon mode), `aria-current="page"`, ThemeToggle.
+- **`<Footer>`** (`components/layout/`) : copyright dynamique (année), lien mentions légales, 3 liens sociaux (GitHub LeonHEU-cesi, LinkedIn placeholder, mailto).
+- **`<ThemeToggle>`** : bouton SVG avec icône soleil/lune selon `resolvedTheme`, hydratation safe via `mounted` state (avec `eslint-disable` motivé en commentaire pour la règle `react-hooks/set-state-in-effect` de React 19).
+- **`app/layout.tsx`** : intégration `<ThemeProvider><ModeProvider><Header /><main><Footer /></>` avec `suppressHydrationWarning` sur `<html>` (`next-themes` ajoute `data-theme` côté client après hydratation).
+- **`app/page.tsx`** : page accueil minimaliste pour vérifier le rendu — sera remplacée par le hero animé au Sprint 1.
+- next-themes ajouté en dépendance runtime.
+
+Tests validés :
+- `npm run lint` → 0 warning (eslint-disable ciblé sur `setMounted(true)` avec justification commentée)
+- `npm run typecheck` → 0 erreur
+- `npm run build` → succès, 2 routes statiques prérenderées
+- `npm run build-storybook` → succès
+- Tests TU Header + Footer prévus mais reportés au Sprint 1 (Vitest browser config existante ne couvre que Storybook test, ajout d'un project unit-jsdom hors scope Sprint 0)
+
+---
