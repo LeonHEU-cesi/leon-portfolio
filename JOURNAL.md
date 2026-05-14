@@ -42,3 +42,25 @@ Tests validés :
 - `npm run build` → succès
 
 ---
+
+### Issue #9 — [0.9] Storybook + 2 stories démo
+
+Init Storybook via `npx storybook@latest init`. La version installée est **Storybook 10.4.0** (au-delà des 8.x prévues — version stable la plus récente). Le scaffold installe également Vitest 4 et Playwright pour les tests visuels via `@storybook/addon-vitest`, ce qui anticipe le setup tests TU prévu au Sprint 1.
+
+- Storybook 10.4 + framework `@storybook/nextjs-vite` (compatible Next.js 16)
+- Addons : `@chromatic-com/storybook`, `@storybook/addon-vitest`, `@storybook/addon-a11y`, `@storybook/addon-docs`
+- Addon `@storybook/addon-mcp` retiré (placeholder AI non nécessaire V1)
+- Stories démo : `Button` + `Header` + `Page` + `Configure.mdx` (4 stories au lieu des 2 minimales demandées)
+- `.storybook/main.ts` : staticDirs corrigé `..\\public` → `../public` (cross-platform Linux CI)
+- `.storybook/preview.tsx` : import `app/globals.css` (Tailwind appliqué), backgrounds light + dark
+- Fix lint dans `stories/Page.tsx` : guillemets HTML échappés `&quot;`
+- Scripts ajoutés : `storybook`, `build-storybook`, `test`, `test:run`, `test:coverage`
+- Vitest 4 + Playwright installés en bonus (sera utilisé Sprint 1 pour les TU)
+
+Tests validés :
+- `npm run lint` → 0 warning
+- `npm run typecheck` → 0 erreur
+- `npm run build` → succès
+- `npm run build-storybook` → succès, output dans `storybook-static/` (gitignored)
+
+---
