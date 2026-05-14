@@ -154,3 +154,19 @@ Tests validés :
 - `npm run typecheck` → 0 erreur
 
 ---
+
+### Issue #22 — [1.2] Tests TU Header / Footer / ThemeToggle
+
+Tests TU des composants posés au Sprint 0 (issue #12), reportés faute de setup Vitest jsdom. Couvre la dette technique listée dans `sprint0-foundations.md § 4`.
+
+- `tests/unit/Header.test.tsx` (5 tests) : rendu 5 items de nav, `aria-current="page"` sur item actif (3 cas : `/`, `/projets/leon-portfolio`, `/about`), logo cliquable vers `/`
+- `tests/unit/Footer.test.tsx` (4 tests) : copyright année dynamique, lien mentions légales, 3 liens sociaux présents, `rel="noopener noreferrer"` sur liens externes
+- `tests/unit/ThemeToggle.test.tsx` (4 tests) : icône lune/soleil + aria-label selon `resolvedTheme`, click toggle light↔dark
+- Mocks : `next/navigation.usePathname` (fonction modulable via `vi.fn`), `next-themes.useTheme`
+
+Tests validés :
+- `npm run test:run` → **15 tests passants** (smoke + 5 Header + 4 Footer + 4 ThemeToggle)
+- `npm run lint` → 0 warning
+- `npm run typecheck` → 0 erreur
+
+---
