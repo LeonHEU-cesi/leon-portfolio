@@ -219,3 +219,29 @@ Tests validés :
 - `npm run build` → succès
 
 ---
+
+### Issue #25 — [1.5] Hero animé GSAP + ScrollTrigger
+
+Implémentation du hero animé scroll-driven sur la page d'accueil. Timeline GSAP avec entrée échelonnée (kicker → titre par lignes/mots stagger → sous-titre → CTAs → hint scroll), parallax léger via ScrollTrigger, fallback statique si `prefers-reduced-motion: reduce`.
+
+- `npm i gsap @gsap/react` (GSAP 3.15 + hook officiel React 2.1)
+- `components/sections/HeroAnimated.tsx` (client) :
+  - `useGSAP` hook officiel (auto cleanup, scope sur le ref container)
+  - Timeline GSAP `power3.out` avec 5 étapes (kicker, mots du titre stagger 80ms, sous-titre, CTAs, scroll hint)
+  - ScrollTrigger : parallax `yPercent: -10` sur le title-wrapper en scrub
+  - `usePrefersReducedMotion()` → `gsap.set` static (opacity 1, y 0) sans timeline
+- `app/page.tsx` remplacé : import `<HeroAnimated />` uniquement (la section "Projets phares" arrive issue #26)
+- `tests/unit/HeroAnimated.test.tsx` (2 tests) : rendu des contenus (kicker, titre 3 lignes, sous-titre, 2 CTAs), accessibilité (`<h1>` avec id + aria-labelledby) — GSAP entièrement mocké
+- Fix collatéral : mock `usePrefersReducedMotion = true` dans `MobileMenu.test.tsx` (durations 0 = exit instantané = test Esc synchrone fiable)
+
+Couvre :
+- US-VI-01 (Hero animé scroll-driven)
+- US-VI-06 (prefers-reduced-motion)
+
+Tests validés :
+- `npm run test:run` → **26 tests passants** (24 précédents + 2 nouveaux Hero, MobileMenu fix)
+- `npm run lint` → 0 warning
+- `npm run typecheck` → 0 erreur
+- `npm run build` → succès
+
+---
