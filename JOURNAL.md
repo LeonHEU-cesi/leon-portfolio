@@ -268,3 +268,28 @@ Tests validés :
 - `npm run build` → succès
 
 ---
+
+### Issue #27 — [1.7] Page /about avec bio narrative
+
+Page `/about` en mode `editorial` (Fraunces + crème + brun). Bio narrative 4 paragraphes, section "Valeurs & approche" en 3 cartes (Qualité du code / Pédagogie / Curiosité), photo placeholder en gradient OKLCH, CTA vers CV et Contact.
+
+- `app/about/page.tsx` créée
+  - Metadata App Router : title "À propos · Léon HEU", description spécifique
+  - Layout 2 colonnes desktop (bio + aside photo), 1 colonne mobile
+  - Aside photo placeholder en gradient OKLCH (vrai portrait à venir Sprint 7)
+  - Section "Valeurs & approche" 3 cartes responsive
+  - Footer CTA "Voir mon CV" et "Me contacter"
+- `tests/unit/AboutPage.test.tsx` (4 tests) : H1, ≥ 3 paragraphes bio, 3 H3 valeurs (sélecteur strict pour éviter le mot "pédagogie" dans la bio), 2 CTA href
+
+Mode `editorial` activé automatiquement via `<ModeProvider>` (route `/about` n'a pas de préfixe tech).
+
+Couvre :
+- US-VI-05 (Page About avec bio narrative)
+
+Tests validés :
+- `npm run test:run` → **33 tests passants** (29 précédents + 4 nouveaux)
+- `npm run lint` → 0 warning
+- `npm run typecheck` → 0 erreur
+- `npm run build` → succès, 3 routes statiques (`/`, `/_not-found`, `/about`)
+
+---
