@@ -127,3 +127,30 @@ Tests validés :
 - Tests TU Header + Footer prévus mais reportés au Sprint 1 (Vitest browser config existante ne couvre que Storybook test, ajout d'un project unit-jsdom hors scope Sprint 0)
 
 ---
+
+## Sprint 1 — Vitrine Hero
+
+### Issue #21 — [1.1] Setup Vitest jsdom + Testing Library
+
+Mise en place de la fondation tests TU avec Vitest 4 multi-projects + @testing-library/react + jsdom + @vitejs/plugin-react. Désormais `npm run test:run` lance les tests unitaires en jsdom, `npm run test:storybook` lance les stories en browser Playwright.
+
+- Installation : `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`, `jsdom`, `@vitejs/plugin-react`
+- `vitest.config.ts` : 2 projects parallèles
+  - `unit` (jsdom, globals, setupFiles, include `tests/unit/**`, alias `@/` → racine web/)
+  - `storybook` (browser Playwright, existant Sprint 0)
+- `vitest.setup.ts` : import `@testing-library/jest-dom/vitest` + cleanup automatique après chaque test
+- `tests/unit/smoke.test.ts` : 2 tests de fumée valident jsdom + Vitest
+- Scripts package.json :
+  - `test` → watch tous projects
+  - `test:run` → run project `unit` (CI default)
+  - `test:run:all` → run les 2
+  - `test:storybook` → run project `storybook`
+  - `test:coverage` → run unit avec coverage v8
+- CI workflow `ci.yml` durci : retrait des `|| echo`, `--if-present` et `continue-on-error` sur lint/typecheck/build/Vitest. Les jobs failent désormais si lint/typecheck/tests échouent.
+
+Tests validés :
+- `npm run test:run` → 2 tests passants (smoke)
+- `npm run lint` → 0 warning
+- `npm run typecheck` → 0 erreur
+
+---
