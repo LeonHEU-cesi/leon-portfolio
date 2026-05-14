@@ -8,8 +8,11 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/",
 }));
 
+// On force prefersReducedMotion = true dans les tests :
+// les durations d'animation passent à 0, le dialog est retiré du DOM
+// instantanément après close() ce qui rend les assertions synchrones fiables.
 vi.mock("@/lib/hooks/usePrefersReducedMotion", () => ({
-  usePrefersReducedMotion: () => false,
+  usePrefersReducedMotion: () => true,
 }));
 
 describe("<MobileMenu />", () => {
