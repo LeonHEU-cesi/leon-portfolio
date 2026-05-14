@@ -1,47 +1,135 @@
 # Direction visuelle — leon-portfolio
 
-**Statut :** ⏳ **3 propositions** — choix utilisateur en attente
+**Statut :** ✅ **Direction retenue : Hybride A+C (éditorial + tech minimaliste)** — validé par Léon le 2026-05-14
 **Issue :** #10
-**Couvre les US :** US-VI-01 (Hero), US-VI-03 (Nav/Footer), US-VI-05 (About), US-VI-06 (prefers-reduced-motion)
+**Couvre les US :** US-VI-01 (Hero), US-VI-03 (Nav/Footer), US-VI-04 (Dark mode), US-VI-05 (About), US-VI-06 (prefers-reduced-motion)
 
 ---
 
-## Cadre commun aux 3 directions
+## 1. Concept retenu — Hybride éditorial × tech
 
-Quelle que soit la direction retenue, les contraintes suivantes s'appliquent :
+Le portfolio adopte **deux identités visuelles cohabitant** selon le contexte de la page :
 
-| Contrainte | Détail |
-|---|---|
-| Cible | Recruteurs tech francophones (RH, CTO, lead dev) |
-| Accessibilité | WCAG AA strict + `prefers-reduced-motion` honoré |
-| Performance | Lighthouse ≥ 90 sur toutes les pages publiques |
-| Responsive | Mobile First, 375px → 1280px+ |
-| Stack | Tailwind CSS v4 (tokens dans `@theme` de `globals.css`) |
-| Dark mode | Obligatoire, persistant via cookie |
-| Animations | GSAP (scroll-driven) + Framer Motion (transitions), désactivables |
+| Mode | Pages concernées | Caractère |
+|---|---|---|
+| **`editorial`** | `/`, `/cv`, `/about`, `/contact`, `/mentions-legales` | Serif élégant, fond crème, atmosphère "presse haut-de-gamme" |
+| **`tech`** | `/projets`, `/projets/[slug]`, `/admin/*`, `/blog/*` (V2) | Mono dominant, fond noir profond, accents néon, ambiance "Linear/Vercel" |
+
+Le **dark mode** se superpose à chaque mode (chacun a sa déclinaison sombre).
+
+### Intention narrative
+- L'arrivée sur la landing donne une impression **éditoriale, posée, élégante** — rassurante pour un recruteur corp ou un client freelance.
+- En cliquant sur "Projets" ou en entrant dans l'admin, le visiteur bascule dans un **mode "atelier dev"** plus brut, signal direct envers la cible technique.
+- Cette dichotomie est en elle-même une **démo de compétence** : maîtrise design + exécution propre du theming dynamique.
 
 ---
 
-## 🅰️ Direction A — Sobre éditorial
+## 2. Mapping technique
+
+### 2.1 Implémentation Tailwind v4 (à appliquer Issue #11)
+
+Dans `app/globals.css`, on déclare 4 jeux de tokens via CSS variables :
+
+```css
+@theme {
+  /* ====== Tokens communs (radius, spacing, animations) ====== */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --font-sans-editorial: 'Inter Variable', system-ui, sans-serif;
+  --font-serif-editorial: 'Fraunces', Georgia, serif;
+  --font-sans-tech: 'Geist Variable', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'JetBrains Mono', monospace;
+}
+
+/* ====== Mode éditorial — light (par défaut) ====== */
+[data-mode='editorial']:root,
+:root {
+  --color-background: oklch(0.97 0.02 80);   /* #FAF7F2 */
+  --color-foreground: oklch(0.14 0 0);        /* #1A1A1A */
+  --color-primary:    oklch(0.30 0.10 30);    /* #3C2415 */
+  --color-secondary:  oklch(0.52 0.05 60);    /* #8B7355 */
+  --color-muted:      oklch(0.92 0.02 80);    /* #E8E2D5 */
+  --color-accent:     oklch(0.55 0.15 30);    /* #C4514C */
+  --font-display: var(--font-serif-editorial);
+  --font-body:    var(--font-sans-editorial);
+}
+
+/* ====== Mode éditorial — dark ====== */
+[data-mode='editorial'][data-theme='dark'] {
+  --color-background: oklch(0.10 0.01 60);
+  --color-foreground: oklch(0.95 0.02 80);
+  --color-primary:    oklch(0.80 0.10 70);
+  --color-accent:     oklch(0.65 0.15 30);
+}
+
+/* ====== Mode tech — dark (par défaut sur ces pages) ====== */
+[data-mode='tech']:root,
+[data-mode='tech'][data-theme='dark'] {
+  --color-background: oklch(0.05 0 0);        /* #0A0A0A */
+  --color-foreground: oklch(0.93 0 0);        /* #EDEDED */
+  --color-primary:    oklch(0.78 0.15 220);   /* #00D9FF cyan néon */
+  --color-secondary:  oklch(0.63 0 0);        /* #A1A1A1 */
+  --color-muted:      oklch(0.10 0 0);        /* #1A1A1A */
+  --color-border:     oklch(0.15 0 0);        /* #262626 */
+  --color-accent:     oklch(0.70 0.14 290);   /* #A78BFA violet */
+  --font-display: var(--font-sans-tech);
+  --font-body:    var(--font-sans-tech);
+}
+
+/* ====== Mode tech — light (option) ====== */
+[data-mode='tech'][data-theme='light'] {
+  --color-background: oklch(0.98 0 0);
+  --color-foreground: oklch(0.10 0 0);
+  --color-primary:    oklch(0.55 0.13 220);
+  --color-accent:     oklch(0.50 0.18 290);
+}
+```
+
+### 2.2 Détection automatique du mode selon route
+
+Dans `app/layout.tsx` (Issue #12), on lit le pathname et on ajoute `data-mode="editorial"` ou `data-mode="tech"` sur le `<html>` ou le `<body>`. Approche via composant client `<ModeProvider>` + `usePathname()`.
+
+```tsx
+// web/components/ModeProvider.tsx (Issue #12)
+'use client';
+import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+
+const TECH_PATHS = ['/projets', '/admin', '/blog'];
+
+export function ModeProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const mode = TECH_PATHS.some(p => pathname.startsWith(p)) ? 'tech' : 'editorial';
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-mode', mode);
+  }, [mode]);
+
+  return <>{children}</>;
+}
+```
+
+Combiné avec `next-themes` pour le dark/light (qui set `data-theme`).
+
+---
+
+## 3. Mode `editorial` — détail
 
 > *« Un portfolio qu'un éditeur de presse haut-de-gamme aurait conçu. »*
 
-### Concept
-Mise en page typographique forte avec serif élégant, espaces blancs généreux, hiérarchie claire. Inspiration : _The New York Times_ digital, _Stripe Press_, _Eames Office_. Les animations sont **discrètes** : fade-in au scroll, parallax léger, transitions de page en blur+fade.
-
-### Palette (light)
-| Rôle | Hex | Usage |
+### Palette (light, par défaut)
+| Rôle | Hex | OKLCH |
 |---|---|---|
-| `background` | `#FAF7F2` | Fond principal (crème chaud) |
-| `foreground` | `#1A1A1A` | Texte principal (noir cassé) |
-| `primary` | `#3C2415` | Accent (brun chocolat) |
-| `secondary` | `#8B7355` | Sous-titres, métadonnées |
-| `muted` | `#E8E2D5` | Cards, séparateurs |
-| `accent` | `#C4514C` | CTA, highlights (rouge brique) |
-| `destructive` | `#9B2C2C` | Erreurs |
+| `background` | `#FAF7F2` | `oklch(0.97 0.02 80)` |
+| `foreground` | `#1A1A1A` | `oklch(0.14 0 0)` |
+| `primary` | `#3C2415` | `oklch(0.30 0.10 30)` |
+| `secondary` | `#8B7355` | `oklch(0.52 0.05 60)` |
+| `muted` | `#E8E2D5` | `oklch(0.92 0.02 80)` |
+| `accent` | `#C4514C` | `oklch(0.55 0.15 30)` |
 
 ### Palette (dark)
-| Rôle | Hex |
+| Rôle | Hex approx |
 |---|---|
 | `background` | `#0F0E0C` |
 | `foreground` | `#F5F0E8` |
@@ -49,110 +137,39 @@ Mise en page typographique forte avec serif élégant, espaces blancs généreux
 | `accent` | `#E07A5F` |
 
 ### Typographie
-- **Display / Headings** : *Fraunces* (serif variable, Google Fonts)
-- **Body** : *Inter* (sans-serif neutre, Google Fonts)
-- **Code/Mono** : *JetBrains Mono*
+- **Display / Hero** : **Fraunces** (serif variable, Google Fonts) — italique grasse pour les sections titres
+- **Body** : **Inter** (sans-serif neutre, déjà fourni par `next/font/google`)
 
-### Animations caractéristiques
-- Hero : titre apparaît par lettre (stagger) + sous-titre fade-up + CTA reveal
-- Scroll : sections fade-up à 200ms avec offset léger
-- Cards projets : tilt subtil au hover (3-5°), shadow douce
-- Transition pages : crossfade 300ms + scale 1.02 → 1
+### Animations
+- Hero : titre apparaît par lettre (GSAP `SplitText` ou stagger Framer Motion)
+- Sous-titre fade-up délai 400ms, CTA reveal 600ms
+- Scroll : sections fade-up à 200ms avec offset 20px
+- Cards projets : tilt subtil 3-5° + shadow douce, hover scale 1.02
+- Transition pages éditorial→éditorial : crossfade 300ms + scale 1.02→1
 
-### Forces
-- ✅ Signal "maturité" et "qualité éditoriale" — rassure les recruteurs corp
-- ✅ A11y facile à tenir (contrastes élevés, anim limitées)
-- ✅ Lighthouse 95+ accessible sans effort
-- ✅ Lisibilité maximale pour le CV et l'About
-
-### Faiblesses
-- ❌ Moins "wahou" en démo tech — paraît "calme" face à un brutaliste
-- ❌ Moins de surface pour démontrer GSAP / WebGL si on en reste là
-- ❌ Risque "ennuyeux" si on néglige le hero
-
-### Références à mood-boarder
-- https://stripe.com (sobriété + détails)
-- https://linear.app (clean + typographie)
-- https://baseline.is (portfolio éditorial)
+### Pages cibles
+- `/` (Accueil) avec hero éditorial fort
+- `/about` avec bio narrative en colonnes presse
+- `/cv` avec timeline élégante
+- `/contact` avec lien mailto stylé
+- `/mentions-legales`
 
 ---
 
-## 🅱️ Direction B — Brutaliste moderne
-
-> *« Un portfolio qui assume sa personnalité de dev/designer. »*
-
-### Concept
-Neo-brutalism + détails ludiques. Gros titres display, blocs colorés saturés, ombres dures (offset noir), transitions audacieuses (slide, scale, rotate). Inspiration : _Vercel ship_, _Gumroad rebrand_, _OFFF_ design conferences. Les animations sont **affirmées** : parallax marqué, magnetic cursor, hover scale 1.05+.
-
-### Palette (light)
-| Rôle | Hex | Usage |
-|---|---|---|
-| `background` | `#FFFEF5` | Crème jaune très clair |
-| `foreground` | `#000000` | Noir pur |
-| `primary` | `#FF5C00` | Accent dominant (orange électrique) |
-| `secondary` | `#0066FF` | Accent 2 (bleu Klein) |
-| `muted` | `#F0EBDD` | Cards |
-| `accent` | `#00D26A` | Vert highlight |
-| `destructive` | `#E01E37` | Erreurs (rouge tomate) |
-
-### Palette (dark)
-| Rôle | Hex |
-|---|---|
-| `background` | `#0A0A0A` |
-| `foreground` | `#FFFEF5` |
-| `primary` | `#FF7733` |
-| `accent` | `#00FF99` |
-
-### Typographie
-- **Display** : *Space Grotesk* (geometric sans, Google Fonts) — ou *Bricolage Grotesque*
-- **Body** : *Geist* (Vercel sans, fonts/Geist) ou *Inter*
-- **Code** : *Geist Mono*
-
-### Animations caractéristiques
-- Hero : titre énorme + slide latéral des mots + curseur magnétique custom
-- Scroll : sections "snap" légers + parallax 0.6x
-- Cards projets : tilt 5-8° + shadow noir 8px offset au hover
-- Transitions pages : slide horizontal (depuis la droite) + masque coloré
-- Bonus : noise grain SVG overlay subtil
-
-### Forces
-- ✅ Mémorable — un recruteur s'en souvient
-- ✅ Démontre directement la maîtrise GSAP / Framer
-- ✅ Identité forte, pas de doute sur la personnalité
-- ✅ Dans la tendance 2024-2026 (rejet du flat design générique)
-
-### Faiblesses
-- ❌ Plus exigeant en a11y (contrastes orange/jaune à valider)
-- ❌ Peut rebuter des recruteurs corp conservateurs (banque, assurance)
-- ❌ Risque de surcharge si trop d'effets cumulés
-- ❌ Lighthouse plus difficile à tenir (animations lourdes)
-
-### Références à mood-boarder
-- https://gumroad.com (brutalist new design)
-- https://vercel.com/ship (event sites)
-- https://offf.barcelona (festival design)
-- https://www.bench.co
-
----
-
-## 🅲️ Direction C — Tech minimaliste sombre
+## 4. Mode `tech` — détail
 
 > *« Un portfolio qui parle à l'oreille des devs et des CTO. »*
 
-### Concept
-Dark mode dominant par défaut (light en option), palette monochrome avec accents néons mesurés, monospace omniprésent, micro-animations précises (60fps obligatoire). Inspiration : _Linear_, _Raycast_, _Vercel docs_, _Cloudflare_. Les animations sont **fonctionnelles** : indicateurs hover, transitions fluides, pas d'effet gratuit.
-
-### Palette (dark par défaut)
-| Rôle | Hex | Usage |
+### Palette (dark, par défaut sur ces pages)
+| Rôle | Hex | OKLCH |
 |---|---|---|
-| `background` | `#0A0A0A` | Fond principal (noir profond) |
-| `foreground` | `#EDEDED` | Texte principal |
-| `primary` | `#00D9FF` | Accent (cyan néon mesuré) |
-| `secondary` | `#A1A1A1` | Sous-titres, métadonnées |
-| `muted` | `#1A1A1A` | Cards, surfaces secondaires |
-| `border` | `#262626` | Bordures discrètes |
-| `accent` | `#A78BFA` | Highlights (violet pastel) |
-| `destructive` | `#F87171` | Erreurs |
+| `background` | `#0A0A0A` | `oklch(0.05 0 0)` |
+| `foreground` | `#EDEDED` | `oklch(0.93 0 0)` |
+| `primary` | `#00D9FF` | `oklch(0.78 0.15 220)` cyan néon |
+| `secondary` | `#A1A1A1` | `oklch(0.63 0 0)` |
+| `muted` | `#1A1A1A` | `oklch(0.10 0 0)` |
+| `border` | `#262626` | `oklch(0.15 0 0)` |
+| `accent` | `#A78BFA` | `oklch(0.70 0.14 290)` violet pastel |
 
 ### Palette (light option)
 | Rôle | Hex |
@@ -163,71 +180,78 @@ Dark mode dominant par défaut (light en option), palette monochrome avec accent
 | `accent` | `#6D28D9` |
 
 ### Typographie
-- **Display** : *Geist* (variable, fonts/Geist)
-- **Body** : *Geist*
-- **Code/Mono** : *Geist Mono* (utilisé largement, pas juste pour le code)
+- **Display + Body** : **Geist** (variable, `geist/font`)
+- **Mono** : **Geist Mono** — utilisé largement, badges code, ASCII art décoratif
 
-### Animations caractéristiques
-- Hero : grille animée subtile en background (SVG ou Canvas léger) + titre fade-up
-- Scroll : opacité progressive sur sections + indicateur de progression
-- Cards projets : border highlight au hover + glow néon très léger
-- Transitions pages : crossfade rapide 200ms (style Linear)
-- Curseur custom (point + cercle, style Raycast)
-- Détails : ASCII art, badges code, terminal-like sur le contact
+### Animations
+- Hero `/projets` : grille SVG animée subtile en background (10% opacité)
+- Cards projets : border highlight cyan + glow néon léger au hover
+- Transitions : crossfade rapide 200ms (style Linear)
+- Curseur custom (point + cercle, style Raycast) en option Sprint 1
+- Transition page tech→tech : pas de delay, juste fade
+- Transition éditorial→tech : transition forte "dissolution → terminal boot" (effet glitch léger 400ms)
 
-### Forces
-- ✅ Cible parfaite : devs, CTO, lead techs
-- ✅ Démontre la rigueur technique sans surcharge
-- ✅ A11y facile (contrastes élevés sur fond sombre)
-- ✅ Lighthouse 95+ tenable
-- ✅ Cohérent avec un portfolio orienté "open source / hub GitHub"
+### Pages cibles
+- `/projets` (catalogue avec filtres et hub GitHub)
+- `/projets/[slug]` (détail)
+- `/admin/*` (back-office)
+- `/blog/*` (V2 plus tard)
 
-### Faiblesses
-- ❌ Moins chaleureux pour des recruteurs non-techs
-- ❌ Risque "déjà vu" (beaucoup de portfolios devs ressemblent à ça en 2026)
-- ❌ Demande de la finesse pour ne pas tomber dans le cliché "matrix"
+---
 
-### Références à mood-boarder
-- https://linear.app
-- https://raycast.com
-- https://vercel.com
+## 5. Cohérence inter-modes
+
+### Éléments partagés (jamais réécrits selon mode)
+- Layout root (Header sticky, Footer)
+- Logo (texte simple "Léon HEU" en font display du mode actif)
+- Toggle dark/light
+- Comportement `prefers-reduced-motion` : désactive toutes les transitions complexes, garde fade simple
+
+### Transitions inter-modes
+- L'utilisateur ne doit pas être surpris de manière désagréable
+- Animation d'environ 400ms entre les 2 contextes (cf. `Transition éditorial→tech`)
+- Header reste sticky pendant la transition
+- Logo morph entre la fonte serif et la fonte sans-serif
+
+---
+
+## 6. Alternatives évaluées (non retenues)
+
+### 🅱️ Brutaliste moderne — non retenue
+
+Trop risqué pour la cible "recruteurs FR corp" et le tampon a11y plus serré. Mémorabilité forte mais polarisant.
+
+Caractéristiques rapides :
+- Palette : `#FFFEF5` + `#FF5C00` (orange) + `#0066FF` (Klein) + `#000`
+- Typo : Space Grotesk + Geist
+- Animations : magnetic cursor, tilt 5-8°, ombres dures offset 8px
+
+### 🅰️ Sobre éditorial pur (sans hybride)
+
+Devient le mode `editorial` ci-dessus, mais appliqué partout. L'hybride permet d'avoir la flexibilité supplémentaire pour la partie technique.
+
+### 🅲️ Tech minimaliste pur (sans hybride)
+
+Devient le mode `tech` ci-dessus, mais appliqué partout. L'hybride conserve l'avantage éditorial sur la landing pour rassurer.
+
+---
+
+## 7. Issues bloquées par cette décision
+
+- ✅ **#10** Direction visuelle → cette PR
+- ▶ **#11** Tokens design Tailwind v4 → implémenter le snippet `@theme` du §2.1
+- ▶ **#12** Layout root + Header / Footer → intégrer `<ModeProvider>` et préparer la transition inter-modes
+
+## 8. Références à mood-boarder (Sprint 1)
+
+### Mode éditorial
+- https://stripe.com (sobriété + détails)
+- https://linear.app/method (typographie serif éditoriale)
+- https://baseline.is (portfolio éditorial)
+- https://nytimes.com/design (presse)
+
+### Mode tech
+- https://linear.app (UI tech minimaliste)
+- https://raycast.com (curseur custom, micro-interactions)
+- https://vercel.com (dark + accents)
 - https://supabase.com
-- https://www.lcdr.fr (portfolio fr)
-
----
-
-## Tableau de décision rapide
-
-| Critère | A — Éditorial | B — Brutaliste | C — Tech minimaliste |
-|---|---|---|---|
-| Cible recruteur corp (banque, assurance) | ★★★★★ | ★★ | ★★★ |
-| Cible recruteur startup/scale-up | ★★★ | ★★★★★ | ★★★★ |
-| Cible CTO / lead dev | ★★★ | ★★★★ | ★★★★★ |
-| Démo compétences animations | ★★ | ★★★★★ | ★★★ |
-| Démo compétences perf | ★★★★ | ★★ | ★★★★★ |
-| Mémorabilité (recruteur revoit le site) | ★★★ | ★★★★★ | ★★★ |
-| A11y AA facile à tenir | ★★★★★ | ★★ | ★★★★ |
-| Effort design (custom assets) | ★★ (faible) | ★★★★ (élevé) | ★★★ (moyen) |
-| Risque "déjà vu" | ★★ | ★★ | ★★★★ |
-| Cohérence avec ton blog technique V2 | ★★★★ | ★★ | ★★★★★ |
-
----
-
-## Hybridation possible (optionnel)
-
-Si tu hésites, on peut **hybrider** :
-- **A + C** : sobre + dark mode tech (typo serif sur landing, mono dans le blog/projets). Élégant et flexible.
-- **B + C** : brutaliste light + tech sombre selon le contexte de la page (hero/CV brutaliste, projets/blog tech). Plus complexe à orchestrer.
-
----
-
-## Choix demandé
-
-Une fois la direction retenue (A / B / C / hybride) :
-1. Cette page est mise à jour avec **uniquement la direction retenue** détaillée (les autres restent en annexe "alternatives évaluées")
-2. L'issue #11 démarre (tokens design Tailwind v4)
-3. L'issue #12 démarre (layout root + Header / Footer)
-
-**À fournir à Claude** :
-- Lettre A / B / C ou hybride (préciser)
-- Ajustements éventuels (couleur dominante, font alternative, etc.)
