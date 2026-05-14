@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { MobileMenu } from "./MobileMenu";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_ITEMS = [
@@ -57,6 +58,7 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <MobileMenu />
         </div>
       </div>
     </header>

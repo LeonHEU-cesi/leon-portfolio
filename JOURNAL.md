@@ -127,3 +127,169 @@ Tests validés :
 - Tests TU Header + Footer prévus mais reportés au Sprint 1 (Vitest browser config existante ne couvre que Storybook test, ajout d'un project unit-jsdom hors scope Sprint 0)
 
 ---
+
+## Sprint 1 — Vitrine Hero
+
+### Issue #21 — [1.1] Setup Vitest jsdom + Testing Library
+
+Mise en place de la fondation tests TU avec Vitest 4 multi-projects + @testing-library/react + jsdom + @vitejs/plugin-react. Désormais `npm run test:run` lance les tests unitaires en jsdom, `npm run test:storybook` lance les stories en browser Playwright.
+
+- Installation : `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`, `jsdom`, `@vitejs/plugin-react`
+- `vitest.config.ts` : 2 projects parallèles
+  - `unit` (jsdom, globals, setupFiles, include `tests/unit/**`, alias `@/` → racine web/)
+  - `storybook` (browser Playwright, existant Sprint 0)
+- `vitest.setup.ts` : import `@testing-library/jest-dom/vitest` + cleanup automatique après chaque test
+- `tests/unit/smoke.test.ts` : 2 tests de fumée valident jsdom + Vitest
+- Scripts package.json :
+  - `test` → watch tous projects
+  - `test:run` → run project `unit` (CI default)
+  - `test:run:all` → run les 2
+  - `test:storybook` → run project `storybook`
+  - `test:coverage` → run unit avec coverage v8
+- CI workflow `ci.yml` durci : retrait des `|| echo`, `--if-present` et `continue-on-error` sur lint/typecheck/build/Vitest. Les jobs failent désormais si lint/typecheck/tests échouent.
+
+Tests validés :
+- `npm run test:run` → 2 tests passants (smoke)
+- `npm run lint` → 0 warning
+- `npm run typecheck` → 0 erreur
+
+---
+
+### Issue #22 — [1.2] Tests TU Header / Footer / ThemeToggle
+
+Tests TU des composants posés au Sprint 0 (issue #12), reportés faute de setup Vitest jsdom. Couvre la dette technique listée dans `sprint0-foundations.md § 4`.
+
+- `tests/unit/Header.test.tsx` (5 tests) : rendu 5 items de nav, `aria-current="page"` sur item actif (3 cas : `/`, `/projets/leon-portfolio`, `/about`), logo cliquable vers `/`
+- `tests/unit/Footer.test.tsx` (4 tests) : copyright année dynamique, lien mentions légales, 3 liens sociaux présents, `rel="noopener noreferrer"` sur liens externes
+- `tests/unit/ThemeToggle.test.tsx` (4 tests) : icône lune/soleil + aria-label selon `resolvedTheme`, click toggle light↔dark
+- Mocks : `next/navigation.usePathname` (fonction modulable via `vi.fn`), `next-themes.useTheme`
+
+Tests validés :
+- `npm run test:run` → **15 tests passants** (smoke + 5 Header + 4 Footer + 4 ThemeToggle)
+- `npm run lint` → 0 warning
+- `npm run typecheck` → 0 erreur
+
+---
+
+### Issue #23 — [1.3] Hook usePrefersReducedMotion + TU
+
+Hook React qui lit la préférence OS `(prefers-reduced-motion: reduce)` et retourne un booléen réactif. SSR-safe (retourne `false` côté serveur). Sera utilisé par les composants `<HeroAnimated>` (#1.5) et `<MobileMenu>` (#1.4) pour désactiver les animations complexes.
+
+- `lib/hooks/usePrefersReducedMotion.ts` : hook avec `useEffect` + `matchMedia.addEventListener('change', ...)`, cleanup au démontage
+- `tests/unit/usePrefersReducedMotion.test.ts` (4 tests) :
+  - retourne `false` par défaut
+  - retourne `true` si `matches: true` initial
+  - met à jour en runtime si la préférence change (test `act()` + dispatch listener)
+  - cleanup correct via `removeEventListener` au démontage
+- Mock matchMedia custom : `createMatchMediaMock` qui simule la registry des listeners pour pouvoir trigger `change` à la volée
+
+Couvre :
+- US-VI-06 (Animations respectant prefers-reduced-motion)
+- TU-VI-02 du Cahier_de_tests.md
+
+Tests validés :
+- `npm run test:run` → **19 tests passants** (15 précédents + 4 nouveaux)
+- `npm run lint` → 0 warning
+- `npm run typecheck` → 0 erreur
+
+---
+
+### Issue #24 — [1.4] Menu burger mobile animé
+
+Menu burger visible `< md` (768px) avec drawer slide-in depuis la droite via Framer Motion. Accessible : `aria-expanded`, `aria-controls`, `role="dialog"`, `aria-modal="true"`, focus management auto, Esc ferme, backdrop click ferme, scroll lock body, honor `usePrefersReducedMotion` (fade simple si reduce demandé).
+
+- `components/layout/MobileMenu.tsx` :
+  - Bouton burger (hamburger SVG → croix SVG selon `isOpen`)
+  - `<AnimatePresence>` Framer Motion : backdrop (fade) + drawer (slide-in OU fade selon reduced motion)
+  - `useEffect` : keydown Esc, body scroll lock, focus management (first link à l'ouverture, retour au trigger à la fermeture), auto-close sur pathname change (avec eslint-disable motivé sur le setState in effect)
+  - `usePrefersReducedMotion` consommé : durations à 0 et drawer en fade au lieu de slide
+- Header.tsx : import + rendu `<MobileMenu />` à côté de `<ThemeToggle />` (visible md:hidden auto via la classe interne du composant)
+- `tests/unit/MobileMenu.test.tsx` (5 tests) :
+  - rendu fermé par défaut (`aria-expanded="false"`)
+  - ouverture au clic (dialog avec aria-modal)
+  - 5 items de navigation visibles
+  - Escape ferme le drawer
+  - body overflow `hidden` pendant ouverture
+- Mocks : `usePathname` ("/"), `usePrefersReducedMotion` (false)
+
+Tests validés :
+- `npm run test:run` → **24 tests passants** (19 précédents + 5 nouveaux)
+- `npm run lint` → 0 warning (eslint-disable ciblé motivé)
+- `npm run typecheck` → 0 erreur
+- `npm run build` → succès
+
+---
+
+### Issue #25 — [1.5] Hero animé GSAP + ScrollTrigger
+
+Implémentation du hero animé scroll-driven sur la page d'accueil. Timeline GSAP avec entrée échelonnée (kicker → titre par lignes/mots stagger → sous-titre → CTAs → hint scroll), parallax léger via ScrollTrigger, fallback statique si `prefers-reduced-motion: reduce`.
+
+- `npm i gsap @gsap/react` (GSAP 3.15 + hook officiel React 2.1)
+- `components/sections/HeroAnimated.tsx` (client) :
+  - `useGSAP` hook officiel (auto cleanup, scope sur le ref container)
+  - Timeline GSAP `power3.out` avec 5 étapes (kicker, mots du titre stagger 80ms, sous-titre, CTAs, scroll hint)
+  - ScrollTrigger : parallax `yPercent: -10` sur le title-wrapper en scrub
+  - `usePrefersReducedMotion()` → `gsap.set` static (opacity 1, y 0) sans timeline
+- `app/page.tsx` remplacé : import `<HeroAnimated />` uniquement (la section "Projets phares" arrive issue #26)
+- `tests/unit/HeroAnimated.test.tsx` (2 tests) : rendu des contenus (kicker, titre 3 lignes, sous-titre, 2 CTAs), accessibilité (`<h1>` avec id + aria-labelledby) — GSAP entièrement mocké
+- Fix collatéral : mock `usePrefersReducedMotion = true` dans `MobileMenu.test.tsx` (durations 0 = exit instantané = test Esc synchrone fiable)
+
+Couvre :
+- US-VI-01 (Hero animé scroll-driven)
+- US-VI-06 (prefers-reduced-motion)
+
+Tests validés :
+- `npm run test:run` → **26 tests passants** (24 précédents + 2 nouveaux Hero, MobileMenu fix)
+- `npm run lint` → 0 warning
+- `npm run typecheck` → 0 erreur
+- `npm run build` → succès
+
+---
+
+### Issue #26 — [1.6] Section "Projets phares" sur l'accueil
+
+Section "Projets phares" affichée sous le Hero. 3 cartes projet avec données mock pour la V1 (la query Prisma viendra Sprint 2 quand Postgres sera up en local). Animation hover Framer Motion subtile (lift + scale 1.01).
+
+- `lib/data/featured-projects.ts` : type `FeaturedProject` + 3 projets en dur (leon-portfolio, CESIZen, Tasknest concept)
+- `components/sections/FeaturedProjects.tsx` (server) : titre de section + grid responsive (1/2/3 cols) + CTA "Voir tous les projets" → /projets
+- `components/sections/FeaturedProjectCard.tsx` (client) : carte avec image gradient OKLCH, titre serif, summary, tags chips, liens Code/Démo. Framer Motion `whileHover={{ y: -4, scale: 1.01 }}` désactivé si `usePrefersReducedMotion`
+- `app/page.tsx` : ajout de `<FeaturedProjects />` sous `<HeroAnimated />`
+- `tests/unit/FeaturedProjects.test.tsx` (3 tests) : titre + CTA, 3 articles, contenu d'un projet (tags + liens)
+
+Note Sprint 2 : remplacer le mock par `prisma.project.findMany({ where: { isFeatured: true, status: 'PUBLISHED' }, take: 3, orderBy: { createdAt: 'desc' } })` côté Server Component, avec try/catch + fallback mock.
+
+Couvre :
+- US-VI-02 (Section "Projets phares" sur l'accueil)
+
+Tests validés :
+- `npm run test:run` → **29 tests passants** (26 précédents + 3 nouveaux)
+- `npm run lint` → 0 warning
+- `npm run typecheck` → 0 erreur
+- `npm run build` → succès
+
+---
+
+### Issue #27 — [1.7] Page /about avec bio narrative
+
+Page `/about` en mode `editorial` (Fraunces + crème + brun). Bio narrative 4 paragraphes, section "Valeurs & approche" en 3 cartes (Qualité du code / Pédagogie / Curiosité), photo placeholder en gradient OKLCH, CTA vers CV et Contact.
+
+- `app/about/page.tsx` créée
+  - Metadata App Router : title "À propos · Léon HEU", description spécifique
+  - Layout 2 colonnes desktop (bio + aside photo), 1 colonne mobile
+  - Aside photo placeholder en gradient OKLCH (vrai portrait à venir Sprint 7)
+  - Section "Valeurs & approche" 3 cartes responsive
+  - Footer CTA "Voir mon CV" et "Me contacter"
+- `tests/unit/AboutPage.test.tsx` (4 tests) : H1, ≥ 3 paragraphes bio, 3 H3 valeurs (sélecteur strict pour éviter le mot "pédagogie" dans la bio), 2 CTA href
+
+Mode `editorial` activé automatiquement via `<ModeProvider>` (route `/about` n'a pas de préfixe tech).
+
+Couvre :
+- US-VI-05 (Page About avec bio narrative)
+
+Tests validés :
+- `npm run test:run` → **33 tests passants** (29 précédents + 4 nouveaux)
+- `npm run lint` → 0 warning
+- `npm run typecheck` → 0 erreur
+- `npm run build` → succès, 3 routes statiques (`/`, `/_not-found`, `/about`)
+
+---
