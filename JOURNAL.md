@@ -170,3 +170,26 @@ Tests validés :
 - `npm run typecheck` → 0 erreur
 
 ---
+
+### Issue #23 — [1.3] Hook usePrefersReducedMotion + TU
+
+Hook React qui lit la préférence OS `(prefers-reduced-motion: reduce)` et retourne un booléen réactif. SSR-safe (retourne `false` côté serveur). Sera utilisé par les composants `<HeroAnimated>` (#1.5) et `<MobileMenu>` (#1.4) pour désactiver les animations complexes.
+
+- `lib/hooks/usePrefersReducedMotion.ts` : hook avec `useEffect` + `matchMedia.addEventListener('change', ...)`, cleanup au démontage
+- `tests/unit/usePrefersReducedMotion.test.ts` (4 tests) :
+  - retourne `false` par défaut
+  - retourne `true` si `matches: true` initial
+  - met à jour en runtime si la préférence change (test `act()` + dispatch listener)
+  - cleanup correct via `removeEventListener` au démontage
+- Mock matchMedia custom : `createMatchMediaMock` qui simule la registry des listeners pour pouvoir trigger `change` à la volée
+
+Couvre :
+- US-VI-06 (Animations respectant prefers-reduced-motion)
+- TU-VI-02 du Cahier_de_tests.md
+
+Tests validés :
+- `npm run test:run` → **19 tests passants** (15 précédents + 4 nouveaux)
+- `npm run lint` → 0 warning
+- `npm run typecheck` → 0 erreur
+
+---
