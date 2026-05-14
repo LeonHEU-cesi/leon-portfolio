@@ -1,0 +1,110 @@
+// Schéma Prisma synchronisé avec Docs/claude/leon-portfolio/mld.md
+// Tables: users, projects, articles, tags, project_tags, article_tags
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("admin")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Project {
+  id         String        @id @default(uuid()) @db.Uuid
+  slug       String        @unique
+  title      String
+  summary    String
+  content    String?
+  repoUrl    String?       @map("repo_url")
+  demoUrl    String?       @map("demo_url")
+  imageUrl   String?       @map("image_url")
+  status     ProjectStatus @default(DRAFT)
+  isFeatured Boolean       @default(false) @map("is_featured")
+  createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt @map("updated_at")
+
+  tags ProjectTag[]
+
+  @@index([status])
+  @@index([isFeatured])
+  @@index([createdAt])
+  @@map("projects")
+}
+
+model Article {
+  id          String        @id @default(uuid()) @db.Uuid
+  slug        String        @unique
+  title       String
+  summary     String
+  content     String?
+  status      ArticleStatus @default(DRAFT)
+  publishedAt DateTime?     @map("published_at")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  tags ArticleTag[]
+
+  @@index([status])
+  @@index([publishedAt])
+  @@map("articles")
+}
+
+model Tag {
+  id        String   @id @default(uuid()) @db.Uuid
+  slug      String   @unique
+  name      String
+  color     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  projects ProjectTag[]
+  articles ArticleTag[]
+
+  @@map("tags")
+}
+
+model ProjectTag {
+  projectId String   @map("project_id") @db.Uuid
+  tagId     String   @map("tag_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, tagId])
+  @@map("project_tags")
+}
+
+model ArticleTag {
+  articleId String   @map("article_id") @db.Uuid
+  tagId     String   @map("tag_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+  @@map("article_tags")
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+}
