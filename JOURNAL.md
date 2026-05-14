@@ -193,3 +193,29 @@ Tests validés :
 - `npm run typecheck` → 0 erreur
 
 ---
+
+### Issue #24 — [1.4] Menu burger mobile animé
+
+Menu burger visible `< md` (768px) avec drawer slide-in depuis la droite via Framer Motion. Accessible : `aria-expanded`, `aria-controls`, `role="dialog"`, `aria-modal="true"`, focus management auto, Esc ferme, backdrop click ferme, scroll lock body, honor `usePrefersReducedMotion` (fade simple si reduce demandé).
+
+- `components/layout/MobileMenu.tsx` :
+  - Bouton burger (hamburger SVG → croix SVG selon `isOpen`)
+  - `<AnimatePresence>` Framer Motion : backdrop (fade) + drawer (slide-in OU fade selon reduced motion)
+  - `useEffect` : keydown Esc, body scroll lock, focus management (first link à l'ouverture, retour au trigger à la fermeture), auto-close sur pathname change (avec eslint-disable motivé sur le setState in effect)
+  - `usePrefersReducedMotion` consommé : durations à 0 et drawer en fade au lieu de slide
+- Header.tsx : import + rendu `<MobileMenu />` à côté de `<ThemeToggle />` (visible md:hidden auto via la classe interne du composant)
+- `tests/unit/MobileMenu.test.tsx` (5 tests) :
+  - rendu fermé par défaut (`aria-expanded="false"`)
+  - ouverture au clic (dialog avec aria-modal)
+  - 5 items de navigation visibles
+  - Escape ferme le drawer
+  - body overflow `hidden` pendant ouverture
+- Mocks : `usePathname` ("/"), `usePrefersReducedMotion` (false)
+
+Tests validés :
+- `npm run test:run` → **24 tests passants** (19 précédents + 5 nouveaux)
+- `npm run lint` → 0 warning (eslint-disable ciblé motivé)
+- `npm run typecheck` → 0 erreur
+- `npm run build` → succès
+
+---
