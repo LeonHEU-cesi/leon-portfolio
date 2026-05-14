@@ -64,3 +64,21 @@ Tests validés :
 - `npm run build-storybook` → succès, output dans `storybook-static/` (gitignored)
 
 ---
+
+### Issue #10 — [0.10] Direction visuelle : Hybride A+C retenue
+
+Trois directions visuelles proposées dans `Docs/claude/leon-portfolio/design/direction-visuelle.md` (Sobre éditorial, Brutaliste moderne, Tech minimaliste sombre), avec palettes light + dark, typographies, animations caractéristiques, références à mood-boarder, et un tableau de décision croisée.
+
+Léon a tranché pour l'**hybride A+C** : mode `editorial` (Fraunces + crème + brun) sur `/`, `/cv`, `/about`, `/contact`, `/mentions-legales` et mode `tech` (Geist + dark + cyan/violet) sur `/projets`, `/projets/[slug]`, `/admin/*`, `/blog/*`. La dichotomie sert elle-même de démo de compétence : maîtrise design + theming dynamique selon route.
+
+- Document mis à jour : direction retenue détaillée + alternatives évaluées en annexe
+- Snippets Tailwind v4 `@theme` documentés avec OKLCH (light + dark pour chaque mode)
+- Plan d'implémentation Issue #11 (tokens) et Issue #12 (`<ModeProvider>` détection automatique selon `usePathname()`)
+- Transition inter-modes documentée : ~400ms dissolution
+
+Tests validés :
+- Décision validée par Léon le 2026-05-14
+- Direction cohérente avec les exigences WCAG AA (contrastes calculables, OKLCH facilite l'audit)
+- Direction cohérente avec les démos de compétence souhaitées (signal CV "design + tech")
+
+---
