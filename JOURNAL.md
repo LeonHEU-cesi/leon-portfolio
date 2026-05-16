@@ -990,3 +990,21 @@ Tests validés :
 - CI verte (branch protection)
 
 ---
+
+## Sprint 5 — Mobile
+
+### Issue #124 — [5.0] API publique web GET /api/projects (+ /[slug])
+
+Réconciliation : le web est en Server Components/Prisma, aucune API JSON. L'app mobile (Expo) ne peut pas importer Prisma → exposer une API publique en lecture.
+
+- `app/api/projects/route.ts` : `GET` (réutilise `getPublishedProjects`, filtre `?tags=`), `Cache-Control` + CORS GET, `OPTIONS` 204, `force-dynamic`
+- `app/api/projects/[slug]/route.ts` : `GET` → détail ou **404 JSON**, CORS, `OPTIONS`
+- Aucune donnée admin exposée (réutilise les fonctions publiques + fallback mock)
+
+Couvre US-PJ-04 (API) — prérequis #5.4/#5.5.
+
+Tests validés :
+- `npm run test:run` → **130 tests passants** (126 + api-projects 4 : liste+CORS, filtre tags, détail, 404). Correctif `vi.hoisted` (factory `vi.mock` ne peut référencer des `const` non hoistés)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
