@@ -825,3 +825,20 @@ Tests validés :
 - `npm run build` → exit 0
 
 ---
+
+### Issue #96 — [4.7] Page /admin dashboard
+
+Tableau de bord admin (protégé middleware, mode tech).
+
+- `lib/admin-stats.ts` : `getAdminStats()` (Prisma lazy `count`, fallback 0)
+- `app/admin/actions.ts` : `logout()` → `signOut({ redirectTo: "/login" })`
+- `components/admin/AdminDashboardView.tsx` (pur) : 3 compteurs, user, nav projets/tags/articles, bouton déconnexion (action injectée)
+- `app/admin/page.tsx` : `auth()` + `getAdminStats()`, `force-dynamic`, `robots noindex`
+
+Couvre US-AD-03.
+
+Tests validés :
+- `npm run test:run` → **105 tests passants** (104 + AdminDashboardView 1)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
