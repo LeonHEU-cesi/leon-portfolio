@@ -931,3 +931,18 @@ Tests validés :
 - `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
 
 ---
+
+### Issue #103 — [4.14] Tests TF API admin (auth, CRUD, rate limit)
+
+- `tests/tf/admin.tf.test.ts` (projet vitest `tf`, vraie DB en CI ; `describe.skip` sans `DATABASE_URL`) : seed isolé (préfixe `tfadmin-`, cleanup avant/après)
+  - TF-AUTH-01/02 : `authorizeCore` (parseCredentials + `findUnique` + `bcrypt.compare`) — identifiants valides/invalides/inconnu
+  - TF-AD-01..07 : `listAdminProjects` (+filtre), `getAdminProject`, `listTags` (+compte), `listAdminArticles`/`getAdminArticle`, `getAdminStats`
+  - rate limit : blocage au-delà du seuil sur DB seedée
+
+Couvre Cahier TF-AD-01..07 / TF-AUTH-01,02.
+
+Tests validés :
+- Local : `lint`/`typecheck` exit 0, `test:run` 126 unit, `test:tf` 14 *skipped* (2 fichiers, pas de DB)
+- **CI `web-tests`** : 14 TF verts sur la DB de service (projets + admin) — preuve empirique sur la PR
+
+---
