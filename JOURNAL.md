@@ -604,3 +604,21 @@ Tests validés :
 - `npm run build` → succès, `/contact` statique
 
 ---
+
+### Issue #70 — [3.6] QR vCard SVG (optionnel)
+
+QR code (SVG) encodant une vCard sur `/contact`, + repli .vcf téléchargeable.
+
+- `lib/vcard.ts` (pur) : `buildVCard` (vCard 3.0, CRLF) + `vcardDataUri` (data URI `text/vcard`)
+- `components/sections/ContactQrCode.tsx` (server async) : `qrcode` → SVG inline, `role="img"` + `aria-label`, lien `download="leon-heu.vcf"`
+- `app/contact/page.tsx` : section QR sous les canaux
+- Deps : `qrcode@^1.5.4` + `@types/qrcode`
+
+Couvre US-CT-02.
+
+Tests validés :
+- `npm run test:run` → **78 tests passants** (75 + vcard 2 + ContactQrCode 1 : SVG `role=img` + lien .vcf data URI)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/contact` statique
+
+---
