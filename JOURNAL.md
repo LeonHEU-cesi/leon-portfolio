@@ -463,3 +463,21 @@ Tests validés :
 - Build vérifié en CI (changement purement CSS/anim, aucune route modifiée)
 
 ---
+
+### Issue #50 — [2.9] Tests TF API /api/projects + mock GitHub
+
+Tests fonctionnels de la couche données projets sur une **vraie base Postgres** (pas de mock Prisma), exécutés en CI sur le service `postgres` après `prisma migrate deploy` (rendu possible par la baseline #2.1).
+
+- `vitest.config.ts` : 3e projet `tf` (environment `node`, `tests/tf/**/*.tf.test.ts`)
+- `package.json` : script `test:tf` (`vitest run --project tf`)
+- `tests/tf/projects.tf.test.ts` : `describe.skip` si pas de `DATABASE_URL` (local propre), sinon seed isolé (préfixe `tf-`, cleanup avant/après) + assertions sur `getPublishedProjects` (exclut DRAFT), filtre tag, `getProjectBySlug` (publié / DRAFT→null / inconnu→null), `getAllTags`, et `fetchPublicRepos` (fetch stubbé) — TF-PJ-01 à 04
+- `ci.yml` (`web-tests`) : ajout `prisma migrate deploy` (DB de service) + step `npm run test:tf`
+
+Couvre Cahier de tests TF-PJ-01 à TF-PJ-04.
+
+Tests validés :
+- Local : `test:run` 65 verts, `test:tf` 6 *skipped* proprement (pas de DB)
+- `npm run lint` / `npm run typecheck` → 0
+- **CI `web-tests`** : `migrate deploy` OK + 6 TF verts sur la DB de service (preuve empirique sur la PR)
+
+---

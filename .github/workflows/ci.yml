@@ -57,8 +57,18 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/leonportfolio_test
 
+      - name: Prisma migrate deploy (DB de test)
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/leonportfolio_test
+
       - name: Vitest run (unit project)
         run: npm run test:run
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/leonportfolio_test
+
+      - name: Vitest TF (tests fonctionnels sur DB)
+        run: npm run test:tf
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/leonportfolio_test
 
