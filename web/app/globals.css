@@ -179,6 +179,33 @@
     .print-only {
       display: revert !important;
     }
+
+    @page {
+      size: A4;
+      margin: 1.5cm;
+    }
+
+    body {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      font-size: 11pt;
+    }
+
+    main {
+      padding: 0 !important;
+    }
+
+    section,
+    li,
+    .break-avoid {
+      break-inside: avoid;
+    }
+
+    h1,
+    h2,
+    h3 {
+      break-after: avoid;
+    }
   }
 }
 

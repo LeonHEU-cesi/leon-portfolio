@@ -569,3 +569,20 @@ Tests validés :
 - `npm run build` → succès, `/cv` statique
 
 ---
+
+### Issue #68 — [3.4] Fidélité PDF imprimé (A4, sauts de page, en-tête)
+
+Affine le rendu imprimé de `/cv` (option print navigateur retenue — pas de Pandoc en CI).
+
+- `app/globals.css` (bloc `@media print`) : `@page { size: A4; margin: 1.5cm }`, `print-color-adjust: exact`, `font-size: 11pt`, `main` sans padding, `break-inside: avoid` sur `section`/`li`/`.break-avoid`, `break-after: avoid` sur les titres
+- `components/sections/CvPrintHeader.tsx` : en-tête `.print-only` (identité + email/site/GitHub) — invisible à l'écran, en tête du PDF
+- `app/cv/page.tsx` : `CvPrintHeader` en haut du document
+
+Couvre US-CV-02 (fidélité).
+
+Tests validés :
+- `npm run test:run` → **72 tests passants** (70 + CvPrintHeader 2 : contenu + conteneur `.print-only` + props)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès (`✓ Compiled`), `/cv` statique
+
+---
