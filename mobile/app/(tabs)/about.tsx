@@ -1,18 +1,31 @@
-import { StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
-// Écran À propos — contenu enrichi au #5.7.
 export default function AboutScreen() {
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">À propos</ThemedText>
-      <ThemedText>Bio à venir.</ThemedText>
-    </ThemedView>
+    <ScrollView>
+      <ThemedView style={styles.container}>
+        <ThemedText type="title">À propos</ThemedText>
+        <ThemedText style={styles.p}>
+          Léon HEU, développeur full-stack en formation Concepteur Développeur
+          d&apos;Applications au CESI.
+        </ThemedText>
+        <ThemedText style={styles.p}>
+          Je conçois des applications web et mobiles soignées, du modèle de
+          données à la mise en production self-host : Next.js, TypeScript,
+          Prisma/PostgreSQL, Expo, Docker.
+        </ThemedText>
+        <ThemedText style={styles.p}>
+          Ce portfolio mobile consomme la même API que le site leonheu.fr.
+        </ThemedText>
+      </ThemedView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, gap: 8, justifyContent: 'center' },
+  container: { padding: 24, gap: 12 },
+  p: { lineHeight: 22, opacity: 0.9 },
 });
