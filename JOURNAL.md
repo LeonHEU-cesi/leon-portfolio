@@ -622,3 +622,21 @@ Tests validés :
 - `npm run build` → succès, `/contact` statique
 
 ---
+
+### Issue #71 — [3.7] Recherche client Fuse.js sur /projets
+
+Recherche temps réel (titre/résumé/tags) sur `/projets`, complémentaire du filtre tags serveur (#2.4).
+
+- `lib/project-search.ts` (pur) : `searchProjects(projects, query)` Fuse.js (`threshold 0.4`, `ignoreLocation`), requête vide → liste inchangée
+- `components/sections/ProjectsSearch.tsx` (client) : input `type="search"` labellisé (`sr-only`), `aria-controls`/`aria-live`, `useMemo` ; filtrage instantané (dataset réduit → pas de debounce, choix UX documenté) ; SSR rend la liste complète → dégradation propre sans JS
+- `app/projets/page.tsx` : `ProjectsListView` remplacé par `ProjectsSearch` (réutilise la vue liste + état vide)
+- Dép : `fuse.js@^7.3.0`
+
+Couvre US-PJ-03.
+
+Tests validés :
+- `npm run test:run` → **84 tests passants** (78 + project-search 4 + ProjectsSearch 2 : filtre live + état vide)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/projets` `ƒ`
+
+---
