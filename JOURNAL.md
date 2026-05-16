@@ -1097,3 +1097,15 @@ Tests validés :
 - `mobile` : typecheck / lint exit 0
 
 ---
+
+### Issue #132 — [5.8] Écran (tabs)/contact + mailto/share
+
+- `lib/contact.ts` (pur) : `buildMailtoUrl` (sujet encodé), `CONTACT_EMAIL`, `GITHUB_URL`
+- `app/(tabs)/contact.tsx` : boutons Email (`Linking` mailto), GitHub (`Linking`), Partager (`Share`)
+
+Couvre US-CT-01.
+
+Tests validés :
+- `mobile` : typecheck / lint exit 0 ; `npm test` → **8/8** (+ contact 2)
+
+---
