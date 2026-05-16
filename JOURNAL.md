@@ -674,3 +674,21 @@ Tests validés :
 - `npm run build` → succès, `/sitemap.xml` + `/robots.txt` générés (`○`)
 
 ---
+
+### Issue #74 — [3.10] Tests TF-WEB recette manuelle (E2E CV / Contact / recherche)
+
+Extension de la suite Playwright (bloquante) avec les parcours Sprint 3.
+
+- `tests/e2e/cv-contact.e2e.spec.ts` :
+  - TF-WEB-04 `/cv` : h1 + section Expériences + bouton "Télécharger le CV en PDF"
+  - TF-WEB-04 `/contact` : lien email `mailto:` + GitHub + bouton "Copier l'adresse email"
+  - TF-WEB-08 `/projets` : recherche client → état vide sur requête sans résultat, retour liste à la réinitialisation
+- Déterministe sans DB (fallback mock pour `/projets`), reste dans le job `web-e2e-lighthouse` bloquant (aucun changement CI nécessaire)
+
+Couvre Cahier de tests TF-WEB-04, TF-WEB-08.
+
+Tests validés :
+- `npm run lint` / `npm run typecheck` → 0 ; TU unit inchangés (89)
+- **CI `web-e2e-lighthouse`** : 2 specs Playwright (projets + cv-contact) vertes et bloquantes (preuve empirique sur la PR)
+
+---
