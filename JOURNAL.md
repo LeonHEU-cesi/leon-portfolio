@@ -377,3 +377,21 @@ Tests validés :
 - `npm run build` → succès : `/` statique (revalidate 5m, fallback mock sans DB), `/projets` dynamique (`ƒ`), aucune route ne casse sans base
 
 ---
+
+### Issue #45 — [2.4] Filtres tags (chips) avec synchronisation URL
+
+Filtrage par tags sur `/projets`, état porté par l'URL (`?tags=docker,nextjs`), rendu **100 % côté serveur** (liens, pas de JS client) : partageable, rechargeable, accessible nativement.
+
+- `lib/tag-filter.ts` (pur) : `parseSelectedTags` (split/trim/lowercase/dédoublonne, supporte la clé répétée) + `toggleTagHref` (bascule un tag, tri canonique, retour `/projets` si vide)
+- `lib/projects.ts` : `getPublishedProjects(tagSlugs)` ajoute `where.tags.some.tag.slug.in` (OR — au moins un tag) ; `getAllTags()` (`tag.findMany` trié, fallback tags dérivés du mock)
+- `components/sections/TagFilter.tsx` : `<nav aria-label>` + chip "Tous" (reset) + un `<Link>` par tag ; tag actif = `aria-current="true"` + `aria-label` "Retirer le filtre X", focus visible
+- `app/projets/page.tsx` : `searchParams` (Promise Next 16) → `parseSelectedTags`, `Promise.all` projets filtrés + tags, compteur `aria-live`, état vide réutilisé
+
+Couvre US-PJ-05.
+
+Tests validés :
+- `npm run test:run` → **51 tests passants** (40 + tag-filter 6 + TagFilter 3 + getAllTags/filtre 2)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès (`/projets` `ƒ` dynamique)
+
+---

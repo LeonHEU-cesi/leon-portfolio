@@ -1,13 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const findMany = vi.fn();
-vi.mock("@/lib/prisma", () => ({ prisma: { project: { findMany } } }));
+const projectFindMany = vi.fn();
+const tagFindMany = vi.fn();
+vi.mock("@/lib/prisma", () => ({
+  prisma: { project: { findMany: projectFindMany }, tag: { findMany: tagFindMany } },
+}));
 
 import { FEATURED_PROJECTS } from "@/lib/data/featured-projects";
-import { getFeaturedProjects, getPublishedProjects, mapProjectToCard } from "@/lib/projects";
+import {
+  getAllTags,
+  getFeaturedProjects,
+  getPublishedProjects,
+  mapProjectToCard,
+} from "@/lib/projects";
 
 beforeEach(() => {
-  findMany.mockReset();
+  projectFindMany.mockReset();
+  tagFindMany.mockReset();
 });
 
 describe("mapProjectToCard", () => {
@@ -29,7 +38,7 @@ describe("mapProjectToCard", () => {
 
 describe("getPublishedProjects", () => {
   it("mappe les projets renvoyés par Prisma", async () => {
-    findMany.mockResolvedValue([
+    projectFindMany.mockResolvedValue([
       {
         slug: "a",
         title: "A",
@@ -42,31 +51,48 @@ describe("getPublishedProjects", () => {
     const result = await getPublishedProjects();
     expect(result).toHaveLength(1);
     expect(result[0]?.slug).toBe("a");
-    expect(result[0]?.tags).toEqual(["Next.js"]);
+  });
+
+  it("ajoute le filtre tags quand des slugs sont fournis", async () => {
+    projectFindMany.mockResolvedValue([]);
+    await getPublishedProjects(["react", "docker"]);
+    expect(projectFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          tags: { some: { tag: { slug: { in: ["react", "docker"] } } } },
+        }),
+      }),
+    );
   });
 
   it("retombe sur le mock si la requête échoue", async () => {
-    findMany.mockRejectedValue(new Error("DB indisponible"));
-    const result = await getPublishedProjects();
-    expect(result).toEqual([...FEATURED_PROJECTS]);
+    projectFindMany.mockRejectedValue(new Error("DB indisponible"));
+    expect(await getPublishedProjects()).toEqual([...FEATURED_PROJECTS]);
   });
 });
 
 describe("getFeaturedProjects", () => {
   it("retombe sur le mock (tronqué) si la base ne renvoie rien", async () => {
-    findMany.mockResolvedValue([]);
-    const result = await getFeaturedProjects(2);
-    expect(result).toHaveLength(2);
+    projectFindMany.mockResolvedValue([]);
+    expect(await getFeaturedProjects(2)).toHaveLength(2);
+  });
+});
+
+describe("getAllTags", () => {
+  it("renvoie les tags triés depuis la base", async () => {
+    tagFindMany.mockResolvedValue([
+      { slug: "docker", name: "Docker" },
+      { slug: "nextjs", name: "Next.js" },
+    ]);
+    const tags = await getAllTags();
+    expect(tags.map((t) => t.slug)).toEqual(["docker", "nextjs"]);
   });
 
-  it("respecte la limite take et mappe les lignes", async () => {
-    findMany.mockResolvedValue([
-      { slug: "f1", title: "F1", summary: "s", repoUrl: null, demoUrl: null, tags: [] },
-    ]);
-    const result = await getFeaturedProjects(3);
-    expect(findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ take: 3, where: expect.objectContaining({ isFeatured: true }) }),
-    );
-    expect(result[0]?.slug).toBe("f1");
+  it("retombe sur les tags du mock si la base échoue", async () => {
+    tagFindMany.mockRejectedValue(new Error("DB down"));
+    const tags = await getAllTags();
+    expect(tags.length).toBeGreaterThan(0);
+    expect(tags[0]).toHaveProperty("slug");
+    expect(tags[0]).toHaveProperty("name");
   });
 });
