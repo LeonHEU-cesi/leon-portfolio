@@ -1064,3 +1064,16 @@ Tests validés :
 - `mobile` : `npm run typecheck` / `npm run lint` exit 0 ; `npm test` (jest-expo) → **5/5** (lib-api : mapping, !ok, 404, détail)
 
 ---
+
+### Issue #129 — [5.5] Écran détail projet + partage
+
+- `app/projects/[slug].tsx` : `useProject(slug)`, états loading/erreur/404, contenu (titre/résumé/tags/corps), `Stack.Screen` titre dynamique, bouton **Partager** (`Share` natif)
+- `lib/share.ts` (pur) : `buildShareMessage` (titre + résumé + lien web `EXPO_PUBLIC_SITE_URL/projets/slug`)
+- `app/(tabs)/projects.tsx` : cartes enveloppées `Link href="/projects/[slug]"` (`Pressable`, `accessibilityRole`)
+
+Couvre US-MOB-04.
+
+Tests validés :
+- `mobile` : `npm run typecheck` / `npm run lint` exit 0 ; `npm test` → **6/6** (lib-api 5 + share 1)
+
+---
