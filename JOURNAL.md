@@ -901,3 +901,17 @@ Tests validés :
 - `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
 
 ---
+
+### Issue #101 — [4.12] Upload images /api/admin/upload + sharp
+
+- `lib/upload.ts` (pur) : `validateUpload(type, size)` (jpeg/png/webp, ≤ 5 Mo)
+- `app/api/admin/upload/route.ts` : `POST` — `auth()` obligatoire (401 sinon), validation, `sharp` **import paresseux** (resize 1600 inside + webp q80), nom `randomUUID().webp`, écriture `public/uploads` (gitignored), `201 { url }`
+- Dép : `sharp@^0.34.5`
+
+Couvre US-AD-06.
+
+Tests validés :
+- `npm run test:run` → **123 tests passants** (120 + upload 3 : formats, vide, trop volumineux)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0 (sharp en import paresseux → build OK)
+
+---
