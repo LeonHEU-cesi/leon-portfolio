@@ -915,3 +915,19 @@ Tests validés :
 - `npm run lint` / `npm run typecheck` / `npm run build` → exit 0 (sharp en import paresseux → build OK)
 
 ---
+
+### Issue #102 — [4.13] /admin/articles CRUD draft (sans publication V1)
+
+- `lib/article-input.ts` (pur) : `validateArticleInput` (titre/résumé requis, slug auto, tags CSV)
+- `lib/admin-articles.ts` : `listAdminArticles` + `articleToFormInitial` (pur) + `getAdminArticle` (lazy fallback null)
+- `app/admin/articles/actions.ts` : `persist` (create/update) **statut forcé `DRAFT`**, `deleteArticle`, slug unique, `connectOrCreate` tags, `redirect` hors try
+- `components/admin/ArticleForm.tsx` (client `useActionState`) + pages liste / new / `[id]` (édition + delete, `notFound`), `force-dynamic noindex`
+- Aucune route publique article (blog V2)
+
+Couvre US-AD-07.
+
+Tests validés :
+- `npm run test:run` → **126 tests passants** (123 + article-input 2 + admin-articles 1)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
