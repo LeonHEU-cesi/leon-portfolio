@@ -325,3 +325,19 @@ Tests validés :
 - Plus d'annotation de dépréciation Node 20 dans le run
 
 ---
+
+### Issue #42 — [2.1] Baseline migration Prisma init committée
+
+Le schéma `Project` / `Tag` / `ProjectTag` (+ `User` / `Article`) existait depuis le Sprint 0 (#6) mais aucune migration n'était versionnée — `prisma migrate deploy` (CI/prod) et les tests TF API (#2.9) étaient bloqués. Création d'une **baseline** sans toucher à la DB de dev.
+
+- `npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script` → `web/prisma/migrations/20260516000000_init/migration.sql` (6 tables, 2 enums `ProjectStatus`/`ArticleStatus`, index `slug`/`status`/`is_featured`/`created_at`, FK `project_tags`/`article_tags` ON DELETE CASCADE)
+- `web/prisma/migrations/migration_lock.toml` (`provider = "postgresql"`)
+- `.gitignore` : suppression de `web/prisma/migrations/dev/` (pattern erroné) — les migrations sont versionnées par convention Prisma
+- DB de dev déjà créée côté Léon : à marquer appliquée sans rejouer via `npx prisma migrate resolve --applied 20260516000000_init` (documenté en note PR)
+
+Tests validés :
+- SQL généré par Prisma lui-même depuis `schema.prisma` (méthode canonique d'init), cohérent avec le MLD
+- `npx prisma validate` → schéma valide
+- CI `web-tests` verte (lint + typecheck + prisma generate + 33 TU)
+
+---
