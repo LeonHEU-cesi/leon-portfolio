@@ -552,3 +552,20 @@ Tests validés :
 - `npm run build` → succès, `/cv` statique
 
 ---
+
+### Issue #67 — [3.3] CSS @media print + bouton "Télécharger le PDF"
+
+`/cv` imprimable proprement + export PDF via le navigateur, sans dépendance externe.
+
+- `app/globals.css` : bloc `@media print` (masque `header`/`footer`/`.no-print`, fond blanc, liens noirs sans soulignement) + utilitaire `.print-only` (caché écran, visible print) — dans `@layer base`
+- `components/ui/PrintButton.tsx` (client) : `window.print()`, `aria-label` explicite, classe `no-print` (s'auto-masque à l'impression)
+- `app/cv/page.tsx` : bouton intégré dans l'en-tête
+
+Couvre US-CV-02 (export).
+
+Tests validés :
+- `npm run test:run` → **70 tests passants** (68 + PrintButton 2 : a11y + classe no-print, clic → `window.print`)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/cv` statique
+
+---

@@ -153,6 +153,33 @@
       scroll-behavior: auto !important;
     }
   }
+
+  /* Impression — CV propre (cf. /cv, issues 3.3 / 3.4) */
+  .print-only {
+    display: none;
+  }
+
+  @media print {
+    header,
+    footer,
+    .no-print {
+      display: none !important;
+    }
+
+    body {
+      background: #fff;
+      color: #000;
+    }
+
+    a {
+      color: #000;
+      text-decoration: none;
+    }
+
+    .print-only {
+      display: revert !important;
+    }
+  }
 }
 
 @layer utilities {

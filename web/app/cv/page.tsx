@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { CvSectionsView } from "@/components/sections/CvSections";
 import { CvTimelineView } from "@/components/sections/CvTimeline";
+import { PrintButton } from "@/components/ui/PrintButton";
 import {
   CV_EXPERIENCES,
   CV_FORMATIONS,
@@ -37,6 +38,9 @@ export default function CvPage() {
             Formation et projets full-stack — du concept à la mise en
             production self-host.
           </p>
+          <div className="mt-6">
+            <PrintButton />
+          </div>
         </header>
 
         <h2 className="mb-8 text-2xl font-semibold">Expériences &amp; projets</h2>
