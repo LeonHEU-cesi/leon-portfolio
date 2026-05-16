@@ -1025,3 +1025,17 @@ Tests validés :
 - Aucun fichier IA résiduel ; web inchangé (CI web verte, `mobile-checks` tolérant jusqu'à #5.13)
 
 ---
+
+### Issue #126 — [5.2] expo-router + layout (tabs) 4 onglets
+
+- `app/(tabs)/_layout.tsx` réécrit : 4 onglets **Accueil / Projets / À propos / Contact** (titres FR, `tabBarAccessibilityLabel`, icônes)
+- `components/ui/icon-symbol.tsx` : MAPPING étendu (`folder.fill`→folder, `person.fill`→person, `envelope.fill`→mail)
+- Suppression de l'onglet template `explore.tsx` ; stubs `projects.tsx`/`about.tsx`/`contact.tsx` (contenu enrichi #5.4/#5.7/#5.8)
+
+Couvre US-MOB-02.
+
+Tests validés :
+- `mobile` : `npm run typecheck` exit 0, `npm run lint` exit 0
+- Navigation tabs fonctionnelle (4 routes résolues)
+
+---
