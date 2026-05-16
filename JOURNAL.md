@@ -1263,3 +1263,17 @@ Tests validés :
 - `npm run test:run` → **138 tests passants** ; `npm run lint`/`typecheck`/`build` → exit 0
 
 ---
+
+### Issue #160 — [6.7] Suite E2E Playwright TE-01..05 consolidée
+
+- `tests/e2e/visitor.e2e.spec.ts` : TE-02 (accueil → CTA « Voir tous les projets » → `/projets`), TE-05 (route inconnue → 404, slug projet inconnu → 404)
+- Couverture TE complète : TE-01/03 (`projets.e2e`), TE-04 (`admin-login.e2e`), TE-02/05 (`visitor.e2e`), + security/cv-contact
+- Déterministe sans DB (fallback mock), scopé `<main>`
+
+Couvre TE-*.
+
+Tests validés :
+- Local : `lint`/`typecheck`/`build` exit 0 ; `npm run test:e2e` → **11/11**
+- **CI** : suite E2E bloquante verte (preuve sur la PR)
+
+---
