@@ -1039,3 +1039,13 @@ Tests validés :
 - Navigation tabs fonctionnelle (4 routes résolues)
 
 ---
+
+### Issue #127 — [5.3] Écran (tabs)/index accueil simplifié
+
+- `app/(tabs)/index.tsx` réécrit (sans le boilerplate template) : titre « Léon HEU », sous-titre, pitch, CTA `Link href="/projects"`
+- `ThemedText`/`ThemedView` du template réutilisés
+
+Tests validés :
+- `mobile` : `npm run typecheck` / `npm run lint` exit 0
+
+---
