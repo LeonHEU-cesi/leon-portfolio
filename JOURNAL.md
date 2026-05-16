@@ -395,3 +395,20 @@ Tests validés :
 - `npm run build` → succès (`/projets` `ƒ` dynamique)
 
 ---
+
+### Issue #46 — [2.5] Page /projets/[slug] : détail + 404 propre
+
+Page détail projet (mode `tech`) avec 404 Next propre si le slug est inconnu ou le projet en DRAFT, et métadonnées dynamiques.
+
+- `lib/projects.ts` : `getProjectBySlug(slug)` → `findUnique` + garde `status === PUBLISHED` (sinon `null` → 404). `ProjectDetail` (avec `content`), `mapProjectToDetail`. Fallback mock (slug connu) si DB KO, `null` sinon
+- `components/sections/ProjectDetailView.tsx` (pur) : retour catalogue, bannière gradient, h1, résumé, chips tags, liens repo/démo (`rel="noopener noreferrer"`), corps `whitespace-pre-line` (MDX riche → V2), fallback résumé si pas de contenu
+- `app/projets/[slug]/page.tsx` : `dynamic = "force-dynamic"`, `generateMetadata` (title + description + OpenGraph), `notFound()` si `null`
+
+Couvre US-PJ-02.
+
+Tests validés :
+- `npm run test:run` → **57 tests passants** (51 + ProjectDetailView 2 + getProjectBySlug 4)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/projets/[slug]` rendu `ƒ` (dynamique, pas de DB au build)
+
+---
