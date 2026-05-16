@@ -311,3 +311,17 @@ Tests validés :
 - `web-tests`, `mobile-checks`, `web-e2e-lighthouse` au vert
 
 ---
+
+### Issue #40 — [2.0bis] Bump actions checkout/setup-node v4 → v5
+
+Le premier run CI réellement exécuté (PR #39) a remonté une dépréciation datée : `actions/checkout@v4` et `actions/setup-node@v4` tournent sur Node 20, bascule forcée Node 24 le 2026-06-02 puis retrait du runner le 2026-09-16. Échéance en plein Sprint 2 → correctif préventif pour éviter une nouvelle régression CI.
+
+- `actions/checkout@v4` → `@v5` (3 occurrences)
+- `actions/setup-node@v4` → `@v5` (3 occurrences)
+- Aucun autre changement (pas de modif des steps, du cache web ni du job mobile)
+
+Tests validés :
+- Run CI sur la PR vert (3 jobs)
+- Plus d'annotation de dépréciation Node 20 dans le run
+
+---
