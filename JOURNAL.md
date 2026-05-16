@@ -293,3 +293,21 @@ Tests validés :
 - `npm run build` → succès, 3 routes statiques (`/`, `/_not-found`, `/about`)
 
 ---
+
+## Sprint 2 — Projets
+
+### Issue #38 — [2.0] Fix CI : le workflow ne compile pas (erreur YAML)
+
+Régression latente depuis le bootstrap : 100 % des runs GitHub Actions étaient des `startup_failure` (0 job, 0 s). Le lint/typecheck/tests ne passaient qu'en local — la CI n'avait en réalité jamais tourné. Prérequis bloquant du Sprint 2 (les PR ne peuvent être validées sans CI verte).
+
+- Cause racine `ci.yml` L119 : `run: npm ci || echo "Sprint 0: mobile/ pas encore initialisé"`. Le `run:` est un scalaire YAML *plain* (les `"` ne quotent que pour le shell, pas pour YAML) ; le `0: ` (deux-points + espace) est lu comme un indicateur de mapping → `mapping values are not allowed here` → fichier entier invalide → GitHub ne crée aucun job.
+- Correctif L119 : message reformulé sans `: ` ni accent (`mobile non initialise (arrive au Sprint 5)`), scalaire YAML sûr.
+- Défaut secondaire `mobile-checks` : `actions/setup-node@v4` avec `cache: npm` + `cache-dependency-path: mobile/package-lock.json` alors que `mobile/` ne contient qu'un `.gitkeep` jusqu'au Sprint 5. Le step `setup-node` (non `continue-on-error`) aurait fait échouer le job même après le fix YAML. Cache npm retiré du job mobile (commentaire explicatif ajouté).
+- Jobs `web-*` inchangés : `web/package-lock.json` présent, 33 TU verts en local, pages `/` et `/about` statiques (build sans DB).
+
+Tests validés :
+- `yaml.safe_load(ci.yml)` → fichier valide (avant : `ScannerError` L119), `name` + `on` + 3 jobs parsés
+- Run CI sur la PR : jobs effectivement créés (plus de `startup_failure`, `jobs` non vide)
+- `web-tests`, `mobile-checks`, `web-e2e-lighthouse` au vert
+
+---
