@@ -754,3 +754,23 @@ Tests validés :
 - CI verte (3 checks, branch protection)
 
 ---
+
+### Issue #92 — [4.3] Setup Auth.js v5 (credentials Prisma + bcrypt)
+
+Authentification admin avec Auth.js v5 (`next-auth@beta`), provider Credentials, session JWT.
+
+- `auth.config.ts` **Edge-safe** (aucun import Prisma/bcrypt) : `pages.signIn=/login`, `session jwt`, `trustHost`, callbacks `authorized` (garde `/admin/*`), `jwt`/`session` (injectent `id`+`role`) — réutilisable par le middleware (#4.4)
+- `lib/credentials.ts` (pur) : `parseCredentials` (objet, email normalisé+regex, password présent) — testable
+- `auth.ts` (Node) : `NextAuth({...authConfig, providers:[Credentials({authorize})]})` ; `authorize` → `parseCredentials` → **import Prisma paresseux** (build sans `DATABASE_URL` OK) → `findUnique` → `bcrypt.compare` → `{id,email,name,role}` ou `null` (aucune énumération, pas de hash renvoyé)
+- `app/api/auth/[...nextauth]/route.ts` : `GET`/`POST` handlers
+- `types/next-auth.d.ts` : augmentation `Session`/`User`/`JWT` (id, role)
+- Branche `feat/web-authjs`, dép `next-auth@^5.0.0-beta.31`
+
+Couvre US-AD-01 (socle auth).
+
+Tests validés :
+- `npm run test:run` → **99 tests passants** (92 + credentials 3 + auth-config 4 : authorized garde /admin, jwt/session)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, route `/api/auth/[...nextauth]` (`ƒ`)
+
+---
