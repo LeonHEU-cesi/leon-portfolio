@@ -1150,3 +1150,17 @@ Tests validés :
 - `mobile` : typecheck / lint exit 0 ; `npm test` → **10/10** (4 suites : lib-api 5, share 1, contact 2, screens 2)
 
 ---
+
+### Issue #137 — [5.13] Durcir le job CI mobile-checks
+
+Le job `mobile-checks` était un placeholder tolérant depuis le Sprint 0. Rendu **réel et bloquant** maintenant que `mobile/` existe.
+
+- `setup-node` : cache npm `mobile/package-lock.json` rétabli
+- Steps **bloquants** (retrait `|| echo`/`|| true`/`continue-on-error`) : `npm ci`, `npm run lint`, `npm run typecheck`, `npm test` (jest-expo)
+- `expo-doctor` conservé toléré (`continue-on-error`) — avertissements de versions bénins
+
+Tests validés :
+- `python yaml.safe_load(ci.yml)` valide ; 4 steps critiques sans `continue-on-error`
+- **CI `mobile-checks`** réel et vert et bloquant (preuve empirique sur la PR)
+
+---
