@@ -871,3 +871,17 @@ Tests validés :
 - `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
 
 ---
+
+### Issue #99 — [4.10] /admin/projects/[id] édition + delete
+
+- `lib/admin-project-detail.ts` : `toFormInitial` (pur) + `getAdminProject(id)` (lazy + fallback null)
+- `app/admin/projects/[id]/page.tsx` : `notFound()` si absent, `ProjectForm` pré-rempli + `updateProject.bind(null,id)`, form delete `deleteProject.bind(null,id)`, `force-dynamic noindex`
+- Réutilise les Server Actions `updateProject`/`deleteProject` (#98)
+
+Couvre US-AD-04 (édition/suppression).
+
+Tests validés :
+- `npm run test:run` → **115 tests passants** (114 + admin-project-detail 1)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
