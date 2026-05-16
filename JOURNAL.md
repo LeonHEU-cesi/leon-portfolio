@@ -976,3 +976,206 @@ Tests validés :
 - CI verte sur `develop` avant release
 
 ---
+
+### Correctif post-S4 — LoginForm.test.tsx non commité (#94)
+
+Honnêteté/traçabilité : `web/tests/unit/LoginForm.test.tsx` (créé au #94) n'avait pas été ajouté au `git add` du commit 4.5 → resté **untracked**. Il s'exécutait en local (d'où les comptes TU du JOURNAL ≥ #94) mais **pas en CI** : `LoginForm` n'était pas couvert côté CI, et les comptes CI réels étaient inférieurs de 2 aux chiffres annoncés.
+
+- Fichier intégré au dépôt (2 tests : champs/callbackUrl + affichage erreur via action)
+- CI passe donc de 124 → **126 TU** (alignée sur le JOURNAL)
+- Leçon : vérifier `git status` (untracked) en fin d'issue, pas seulement `git add <chemins>` ciblés
+
+Tests validés :
+- `npm run test:run` → 126 (le fichier orphelin désormais tracké et exécuté en CI)
+- CI verte (branch protection)
+
+---
+
+## Sprint 5 — Mobile
+
+### Issue #124 — [5.0] API publique web GET /api/projects (+ /[slug])
+
+Réconciliation : le web est en Server Components/Prisma, aucune API JSON. L'app mobile (Expo) ne peut pas importer Prisma → exposer une API publique en lecture.
+
+- `app/api/projects/route.ts` : `GET` (réutilise `getPublishedProjects`, filtre `?tags=`), `Cache-Control` + CORS GET, `OPTIONS` 204, `force-dynamic`
+- `app/api/projects/[slug]/route.ts` : `GET` → détail ou **404 JSON**, CORS, `OPTIONS`
+- Aucune donnée admin exposée (réutilise les fonctions publiques + fallback mock)
+
+Couvre US-PJ-04 (API) — prérequis #5.4/#5.5.
+
+Tests validés :
+- `npm run test:run` → **130 tests passants** (126 + api-projects 4 : liste+CORS, filtre tags, détail, 404). Correctif `vi.hoisted` (factory `vi.mock` ne peut référencer des `const` non hoistés)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
+
+### Issue #125 — [5.1] Init projet Expo SDK 54 dans mobile/
+
+Scaffold de l'app Expo dans `mobile/` (suppression `.gitkeep`).
+
+- `npx create-expo-app@latest mobile --template default` (Expo **SDK 54.0.33**, React Native 0.81, expo-router 6, TypeScript, reanimated 4 déjà inclus)
+- **Fichiers IA supprimés** : `mobile/AGENTS.md`, `mobile/CLAUDE.md`, `mobile/.claude/` (générés par le scaffold, interdits par la méthodo)
+- `package.json` : ajout script `typecheck` (`tsc --noEmit`)
+- `mobile/.gitignore` du template (node_modules/.expo/dist ignorés) ; `node_modules` non commité
+
+Couvre US-MOB-01.
+
+Tests validés :
+- `mobile` : `npm run typecheck` exit 0, `npm run lint` (expo lint) exit 0
+- Aucun fichier IA résiduel ; web inchangé (CI web verte, `mobile-checks` tolérant jusqu'à #5.13)
+
+---
+
+### Issue #126 — [5.2] expo-router + layout (tabs) 4 onglets
+
+- `app/(tabs)/_layout.tsx` réécrit : 4 onglets **Accueil / Projets / À propos / Contact** (titres FR, `tabBarAccessibilityLabel`, icônes)
+- `components/ui/icon-symbol.tsx` : MAPPING étendu (`folder.fill`→folder, `person.fill`→person, `envelope.fill`→mail)
+- Suppression de l'onglet template `explore.tsx` ; stubs `projects.tsx`/`about.tsx`/`contact.tsx` (contenu enrichi #5.4/#5.7/#5.8)
+
+Couvre US-MOB-02.
+
+Tests validés :
+- `mobile` : `npm run typecheck` exit 0, `npm run lint` exit 0
+- Navigation tabs fonctionnelle (4 routes résolues)
+
+---
+
+### Issue #127 — [5.3] Écran (tabs)/index accueil simplifié
+
+- `app/(tabs)/index.tsx` réécrit (sans le boilerplate template) : titre « Léon HEU », sous-titre, pitch, CTA `Link href="/projects"`
+- `ThemedText`/`ThemedView` du template réutilisés
+
+Tests validés :
+- `mobile` : `npm run typecheck` / `npm run lint` exit 0
+
+---
+
+### Issue #128 — [5.4] Écran Projets : FlatList + TanStack Query
+
+- Deps : `@tanstack/react-query` + infra tests `jest-expo` (`@testing-library/react-native`, jest config preset + `moduleNameMapper @/`)
+- `lib/api.ts` : `fetchProjects`/`fetchProject` (base `EXPO_PUBLIC_API_URL` défaut prod, `fetch` injectable, 404→null, throw si !ok)
+- `lib/query-client.ts` (singleton) + `app/_layout.tsx` enveloppé `QueryClientProvider`
+- `hooks/use-projects.ts` : `useProjects` / `useProject`
+- `app/(tabs)/projects.tsx` : `FlatList` (cartes titre/résumé/tags), états loading/erreur/vide
+
+Couvre US-MOB-03 (consomme l'API #5.0).
+
+Tests validés :
+- `mobile` : `npm run typecheck` / `npm run lint` exit 0 ; `npm test` (jest-expo) → **5/5** (lib-api : mapping, !ok, 404, détail)
+
+---
+
+### Issue #129 — [5.5] Écran détail projet + partage
+
+- `app/projects/[slug].tsx` : `useProject(slug)`, états loading/erreur/404, contenu (titre/résumé/tags/corps), `Stack.Screen` titre dynamique, bouton **Partager** (`Share` natif)
+- `lib/share.ts` (pur) : `buildShareMessage` (titre + résumé + lien web `EXPO_PUBLIC_SITE_URL/projets/slug`)
+- `app/(tabs)/projects.tsx` : cartes enveloppées `Link href="/projects/[slug]"` (`Pressable`, `accessibilityRole`)
+
+Couvre US-MOB-04.
+
+Tests validés :
+- `mobile` : `npm run typecheck` / `npm run lint` exit 0 ; `npm test` → **6/6** (lib-api 5 + share 1)
+
+---
+
+### Issue #130 — [5.6] Pull-to-refresh catalogue
+
+- `app/(tabs)/projects.tsx` : `RefreshControl` (refreshing=`isRefetching`, onRefresh=`refetch` TanStack Query)
+
+Couvre US-MOB-05.
+
+Tests validés :
+- `mobile` : typecheck / lint exit 0 ; `npm test` 6/6 (comportement RefreshControl couvert par la recette #5.12)
+
+---
+
+### Issue #131 — [5.7] Écran (tabs)/about
+
+- `app/(tabs)/about.tsx` : bio courte (cohérente avec le web `/about`), `ScrollView`
+
+Tests validés :
+- `mobile` : typecheck / lint exit 0
+
+---
+
+### Issue #132 — [5.8] Écran (tabs)/contact + mailto/share
+
+- `lib/contact.ts` (pur) : `buildMailtoUrl` (sujet encodé), `CONTACT_EMAIL`, `GITHUB_URL`
+- `app/(tabs)/contact.tsx` : boutons Email (`Linking` mailto), GitHub (`Linking`), Partager (`Share`)
+
+Couvre US-CT-01.
+
+Tests validés :
+- `mobile` : typecheck / lint exit 0 ; `npm test` → **8/8** (+ contact 2)
+
+---
+
+### Issue #133 — [5.9] Animations transitions Reanimated
+
+- `hooks/use-reduce-motion.ts` : suit `AccessibilityInfo` (reduceMotion + listener)
+- `app/(tabs)/projects.tsx` : cartes en `Animated.View` `FadeInDown` échelonné (`delay index*50`), **désactivé si reduce motion**
+
+Tests validés :
+- `mobile` : typecheck / lint exit 0 ; `npm test` 8/8 (anim/a11y vérifiées en recette #5.12)
+
+---
+
+### Issue #134 — [5.10] Configuration EAS Build (profil preview)
+
+- `mobile/eas.json` : profils `development` / **`preview`** (`distribution: internal`, `android.buildType: apk`) / `production` (`autoIncrement`)
+- `mobile/app.json` : `name` "Léon HEU — Portfolio", `slug` `leon-portfolio`, `android.package` + `ios.bundleIdentifier` `fr.leonheu.portfolio`
+- Build cloud APK = étape Léon (#5.11, credentials EAS) : `cd mobile && npx eas login && npx eas build -p android --profile preview`
+
+Couvre US-MOB-01 (config).
+
+Tests validés :
+- `mobile` : typecheck / lint exit 0 ; `eas.json`/`app.json` JSON valides (config uniquement, pas de build cloud ici)
+
+---
+
+### Issue #135 — [5.11] Build APK preview + test device
+
+⚠ **Étape manuelle Léon** (credentials EAS) — non automatisable, comme `docker/migrate` au Sprint 2. Config livrée (#134). Issue **laissée ouverte** (dépendance externe), procédure documentée en commentaire d'issue + recette #5.12. Le Sprint 5 est clôturé avec cette issue explicitement en attente.
+
+---
+
+### Issue #136 — [5.12] Recette manuelle TM + proxies automatisés
+
+- `Docs/claude/leon-portfolio/mobile-recette.md` : checklist **TM-01..08** (device, à dérouler par Léon après l'APK #5.11)
+- Proxies automatisés (jest-expo, sans device) : `lib/api`, `lib/share`, `lib/contact` + **smoke render** des écrans statiques About/Contact
+
+Couvre Cahier de tests TM-*.
+
+Tests validés :
+- `mobile` : typecheck / lint exit 0 ; `npm test` → **10/10** (4 suites : lib-api 5, share 1, contact 2, screens 2)
+
+---
+
+### Issue #137 — [5.13] Durcir le job CI mobile-checks
+
+Le job `mobile-checks` était un placeholder tolérant depuis le Sprint 0. Rendu **réel et bloquant** maintenant que `mobile/` existe.
+
+- `setup-node` : cache npm `mobile/package-lock.json` rétabli
+- Steps **bloquants** (retrait `|| echo`/`|| true`/`continue-on-error`) : `npm ci`, `npm run lint`, `npm run typecheck`, `npm test` (jest-expo)
+- `expo-doctor` conservé toléré (`continue-on-error`) — avertissements de versions bénins
+
+Tests validés :
+- `python yaml.safe_load(ci.yml)` valide ; 4 steps critiques sans `continue-on-error`
+- **CI `mobile-checks`** réel et vert et bloquant (preuve empirique sur la PR)
+
+---
+
+### Issue #138 — [5.14] Sprint 5 review + release v0.6.0
+
+Clôture du Sprint 5 (timeboxée — #5.11 build APK en attente externe EAS).
+
+- `Docs/claude/Sprint docs/sprint5-mobile.md` : 13/14 issues codables + PRs, stack mobile (Expo 54, expo-router, TanStack Query, jest-expo), décisions (réconciliation API, scaffold, CI durcie), dette, métriques (web 130 TU / mobile 10 jest), DoD §8 (hors #5.11), prépa Sprint 6
+- PR `release: Sprint 5 - Mobile` develop→main (merge commit), tag `v0.6.0`, M5 fermée (timebox ; #135 reste ouverte, documentée), `gh release`
+- Mémoire mise à jour ; statut explicite du build APK
+
+Tests validés :
+- Récap conforme au format Sprint 4, versions cohérentes
+- Toutes les issues codables Sprint 5 closed ; #135 explicitement en attente externe
+- CI verte sur `develop` avant release
+
+---
