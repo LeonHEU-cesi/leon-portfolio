@@ -1353,3 +1353,13 @@ Tests validés :
 - Cohérence avec le code et `project_stack` mémoire ; aucune version obsolète résiduelle
 
 ---
+
+### Issue #167 — [6.14] Nettoyage composants template mobile inutilisés
+
+- Suppression (0 référence vérifiée) : `components/hello-wave.tsx`, `parallax-scroll-view.tsx`, `external-link.tsx`, `ui/collapsible.tsx`, `app/modal.tsx`
+- `app/_layout.tsx` : retrait du `Stack.Screen "modal"` (route orpheline)
+
+Tests validés :
+- `mobile` : 0 référence résiduelle ; `typecheck`/`lint` exit 0 ; `npm test` **10/10**
+
+---
