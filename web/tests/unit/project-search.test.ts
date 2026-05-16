@@ -20,24 +20,24 @@ const P: FeaturedProject[] = [
   },
 ];
 
-describe("searchProjects", () => {
-  it("retourne tout si requête vide", () => {
-    expect(searchProjects(P, "")).toHaveLength(2);
-    expect(searchProjects(P, "   ")).toHaveLength(2);
+describe("searchProjects (fuse.js lazy, async)", () => {
+  it("retourne tout si requête vide (sans charger fuse)", async () => {
+    await expect(searchProjects(P, "")).resolves.toHaveLength(2);
+    await expect(searchProjects(P, "   ")).resolves.toHaveLength(2);
   });
 
-  it("matche sur le titre", () => {
-    const r = searchProjects(P, "portfolio");
+  it("matche sur le titre", async () => {
+    const r = await searchProjects(P, "portfolio");
     expect(r).toHaveLength(1);
     expect(r[0]?.slug).toBe("a");
   });
 
-  it("matche sur un tag", () => {
-    const r = searchProjects(P, "laravel");
+  it("matche sur un tag", async () => {
+    const r = await searchProjects(P, "laravel");
     expect(r[0]?.slug).toBe("b");
   });
 
-  it("retourne [] si aucun résultat", () => {
-    expect(searchProjects(P, "zzzznomatch")).toHaveLength(0);
+  it("retourne [] si aucun résultat", async () => {
+    await expect(searchProjects(P, "zzzznomatch")).resolves.toHaveLength(0);
   });
 });

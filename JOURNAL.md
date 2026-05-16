@@ -1250,3 +1250,16 @@ Tests validés :
 - **CI** : step Lighthouse exécuté (rapport généré, non bloquant)
 
 ---
+
+### Issue #159 — [6.6] Optimisation perf : lazy-load fuse.js
+
+- `lib/project-search.ts` : `fuse.js` chargé en **import dynamique** (`await import`) → sort du bundle initial `/projets`, chargé seulement à la 1re recherche non vide. `searchProjects` devient async
+- `components/sections/ProjectsSearch.tsx` : effet async avec garde anti-stale ; **cas requête vide dérivé au rendu** (pas de `setState` synchrone → respecte `react-hooks/set-state-in-effect`, aucun `eslint-disable`)
+- Tests `project-search`/`ProjectsSearch` adaptés (async + `waitFor`)
+
+Couvre TP-* (code-splitting).
+
+Tests validés :
+- `npm run test:run` → **138 tests passants** ; `npm run lint`/`typecheck`/`build` → exit 0
+
+---
