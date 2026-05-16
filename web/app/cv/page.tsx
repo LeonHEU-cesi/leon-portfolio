@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 
+import { CvSectionsView } from "@/components/sections/CvSections";
 import { CvTimelineView } from "@/components/sections/CvTimeline";
-import { CV_EXPERIENCES } from "@/lib/data/cv";
+import {
+  CV_EXPERIENCES,
+  CV_FORMATIONS,
+  CV_LANGUES,
+  CV_LOISIRS,
+  CV_SKILLS,
+} from "@/lib/data/cv";
 
 export const metadata: Metadata = {
   title: "CV",
@@ -34,6 +41,13 @@ export default function CvPage() {
 
         <h2 className="mb-8 text-2xl font-semibold">Expériences &amp; projets</h2>
         <CvTimelineView entries={CV_EXPERIENCES} />
+
+        <CvSectionsView
+          skills={CV_SKILLS}
+          formations={CV_FORMATIONS}
+          langues={CV_LANGUES}
+          loisirs={CV_LOISIRS}
+        />
       </div>
     </section>
   );
