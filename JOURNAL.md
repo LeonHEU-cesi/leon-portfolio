@@ -961,3 +961,18 @@ Tests validés :
 - **CI `web-e2e-lighthouse`** : E2E bloquants verts (AUTH_SECRET job) — preuve sur la PR
 
 ---
+
+### Issue #105 — [4.16] Sprint 4 review + release v0.5.0
+
+Clôture du Sprint 4 (le plus chargé) : revue, release develop→main, tag `v0.5.0`.
+
+- `Docs/claude/Sprint docs/sprint4-admin.md` : 15 issues + PRs, stack (next-auth v5, sharp), décisions (split Edge/Node, authorize uniforme, export middleware, rate limit, upload, branch protection), dette, métriques (126 TU / 14 TF / 7 E2E), DoD §7 cochée, prépa Sprint 5 (Mobile)
+- PR `release: Sprint 4 - Admin` develop→main (merge commit) ; tag `v0.5.0` + `gh release` ; milestone M4 fermée
+- Mémoire projet mise à jour
+
+Tests validés :
+- Récap conforme au format Sprint 3, versions cohérentes
+- Toutes les issues Sprint 4 closed, M4 fermée
+- CI verte sur `develop` avant release
+
+---
