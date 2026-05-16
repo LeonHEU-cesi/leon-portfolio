@@ -358,3 +358,22 @@ Tests validés :
 - 5 projets PUBLISHED + 1 DRAFT, 3 featured (≥3 requis pour la home)
 
 ---
+
+### Issue #44 — [2.3] Page /projets + prisma.project.findMany (+ swap mock home)
+
+Catalogue `/projets` (mode `tech`) alimenté par Prisma, et bascule de la section "Projets phares" de la home du mock vers la base — clôture la dette du Sprint 1 (#26).
+
+- `lib/projects.ts` : `getPublishedProjects()` / `getFeaturedProjects(take)` (`findMany` PUBLISHED [+ `isFeatured`], `include` tags, `orderBy createdAt desc`). `mapProjectToCard` aplatit les tags et dérive un gradient déterministe du slug (visuel sans upload). Fallback `FEATURED_PROJECTS` (mock) si la DB échoue ou liste vide.
+- **Import Prisma paresseux** (`await import("@/lib/prisma")` dans le try) : `next build` sans `DATABASE_URL` ne plante plus à l'import — la construction du client est dans le try/catch.
+- Split présentationnel : `FeaturedProjectsView` / `ProjectsListView` (purs, testables sync) + `FeaturedProjects` / `app/projets/page.tsx` (Server Components async).
+- `app/projets/page.tsx` : `metadata`, `dynamic = "force-dynamic"` (pas de pré-rendu DB au build), h1 + intro mode tech, grille responsive 1/2/3, état vide accessible (`role="status"`).
+- `app/page.tsx` : `revalidate = 300` (ISR — featured rafraîchi en prod, build retombe sur le mock).
+
+Couvre US-PJ-01 ; clôt la note Sprint 2 de #26.
+
+Tests validés :
+- `npm run test:run` → **40 tests passants** (33 + Data 5 + ProjectsListView 2, FeaturedProjects → FeaturedProjectsView)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès : `/` statique (revalidate 5m, fallback mock sans DB), `/projets` dynamique (`ƒ`), aucune route ne casse sans base
+
+---
