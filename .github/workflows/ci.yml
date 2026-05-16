@@ -101,8 +101,7 @@ jobs:
         run: npm run build
 
       - name: Playwright E2E
-        run: npm run test:e2e --if-present
-        continue-on-error: true
+        run: npm run test:e2e
 
       - name: Lighthouse CI
         run: npm run lhci --if-present
