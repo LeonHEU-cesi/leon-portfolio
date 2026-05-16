@@ -1321,3 +1321,20 @@ Tests validés :
 - `npm run lint`/`typecheck` exit 0 ; `npm run build` → `/opengraph-image` `○`, `/projets/[slug]/opengraph-image` `ƒ`
 
 ---
+
+### Issue #164 — [6.11] Workflow deploy-staging + compose + Dockerfile
+
+- `web/Dockerfile` (Next **standalone** multi-stage) + `next.config.ts` `output: "standalone"`
+- `infra/docker-compose.staging.yml` (web+postgres+caddy, env obligatoires gardés) + `infra/Caddyfile.staging` (TLS auto)
+- `.github/workflows/deploy-staging.yml` : push `develop` → SSH compose up + `migrate deploy` ; **gardé** (no-op propre si `STAGING_SSH_HOST` absent → pas d'échec CI ; non requis par branch protection)
+- `Docs/claude/leon-portfolio/deploiement-staging.md` : provisioning VM, secrets, DNS, run
+
+⏳ #165 [6.12] DNS `staging.leonheu.fr` + provisioning VM + secrets = **étape Léon** (issue ouverte, documentée §2/§3 du doc)
+
+Couvre infra Sprint 6.
+
+Tests validés :
+- YAML valides (ci.yml, deploy-staging.yml, compose ×2) ; `lint`/`typecheck` 0 ; **139 TU** ; `npm run build` → `.next/standalone` produit
+- `deploy-staging.yml` no-op vérifié (gate secrets) — n'impacte pas la CI requise
+
+---
