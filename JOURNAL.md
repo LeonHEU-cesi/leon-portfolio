@@ -657,3 +657,20 @@ Tests validés :
 - `npm run build` → succès, `/mentions-legales` statique
 
 ---
+
+### Issue #73 — [3.9] sitemap.ts + robots.ts
+
+SEO de base via les metadata routes Next App Router.
+
+- `lib/seo.ts` (pur) : `siteUrl()` (`NEXT_PUBLIC_SITE_URL` défaut `https://leonheu.fr`, slash final retiré) + `buildSitemapEntries(base, slugs)` (6 routes statiques + pages projets, URLs absolues, priorités)
+- `app/sitemap.ts` : async, `getPublishedProjects()` (fallback mock → jamais d'échec build) → `buildSitemapEntries`
+- `app/robots.ts` : `allow: "/"` + `sitemap` absolu
+
+Couvre US-TR-05.
+
+Tests validés :
+- `npm run test:run` → **89 tests passants** (86 + seo 3 : siteUrl défaut/env, entrées statiques+projets)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/sitemap.xml` + `/robots.txt` générés (`○`)
+
+---
