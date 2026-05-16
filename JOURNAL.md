@@ -774,3 +774,20 @@ Tests validés :
 - `npm run build` → succès, route `/api/auth/[...nextauth]` (`ƒ`)
 
 ---
+
+### Issue #93 — [4.4] Middleware Next.js de protection /admin/*
+
+Protection des routes admin via le middleware Auth.js (pattern split Edge-safe).
+
+- `middleware.ts` : `NextAuth(authConfig)` (authConfig sans Prisma/bcrypt → Edge-safe), `matcher: ["/admin/:path*"]`
+- Le callback `authorized` (#92) renvoie `false` pour `/admin/*` sans session → Auth.js redirige vers `/login` avec `callbackUrl` automatique
+- Logique de garde déjà couverte par `auth-config.test.ts` (#92) ; parcours E2E prévu #4.15
+
+Couvre US-AD-01 (protection).
+
+Tests validés :
+- `npm run test:run` → 99 tests passants (inchangé — garde testée via authConfig)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès (middleware Edge compilé)
+
+---
