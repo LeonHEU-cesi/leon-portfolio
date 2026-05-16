@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { ModeProvider } from "@/components/providers/ModeProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { personJsonLd } from "@/lib/json-ld";
 
 import "./globals.css";
 
@@ -63,6 +64,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd()) }}
+        />
         <ThemeProvider>
           <ModeProvider>
             <Header />
