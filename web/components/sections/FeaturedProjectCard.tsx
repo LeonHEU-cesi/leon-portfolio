@@ -22,7 +22,12 @@ export function FeaturedProjectCard({ project }: { project: FeaturedProject }) {
       />
       <div className="flex flex-1 flex-col gap-3 p-5">
         <h3 className="font-[var(--font-display)] text-xl font-semibold tracking-tight">
-          {project.title}
+          <Link
+            href={`/projets/${project.slug}`}
+            className="underline-offset-4 outline-offset-4 hover:text-[var(--primary)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--primary)]"
+          >
+            {project.title}
+          </Link>
         </h3>
         <p className="flex-1 text-sm text-[var(--secondary)]">{project.summary}</p>
         <ul className="flex flex-wrap gap-2 pt-1" aria-label="Technologies">

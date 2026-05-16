@@ -481,3 +481,21 @@ Tests validés :
 - **CI `web-tests`** : `migrate deploy` OK + 6 TF verts sur la DB de service (preuve empirique sur la PR)
 
 ---
+
+### Issue #51 — [2.10] Tests E2E Playwright : parcours catalogue → détail
+
+Première vraie suite Playwright (vide depuis le Sprint 0), rendue **bloquante** en CI.
+
+- `@playwright/test@^1.60` ajouté (devDep ; `playwright` 1.60 déjà présent), script `test:e2e`
+- `playwright.config.ts` : `testDir tests/e2e`, projet chromium, `webServer: npm run start` (sert le build du step CI), `reuseExistingServer: !CI`, retries CI
+- `FeaturedProjectCard` : titre désormais lien interne vers `/projets/[slug]` (lien manquant — requis pour le parcours catalogue → détail, bénéficie aussi à la home)
+- `tests/e2e/projets.e2e.spec.ts` : TE-01 (catalogue affiché) + TE-03 (filtre tag → URL `?tags=`, carte → détail, retour). Déterministe sans DB grâce au fallback mock (#2.3)
+- `ci.yml` (`web-e2e-lighthouse`) : step Playwright **bloquant** (retrait de `--if-present` + `continue-on-error`)
+
+Couvre Cahier de tests TE-01, TE-03.
+
+Tests validés :
+- Local : `lint` / `typecheck` 0, `test:run` **65 verts** (lien carte intégré sans régression)
+- **CI `web-e2e-lighthouse`** : `Playwright E2E` vert et bloquant (preuve empirique sur la PR)
+
+---
