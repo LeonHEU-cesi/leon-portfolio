@@ -293,3 +293,225 @@ Tests validés :
 - `npm run build` → succès, 3 routes statiques (`/`, `/_not-found`, `/about`)
 
 ---
+
+## Sprint 2 — Projets
+
+### Issue #38 — [2.0] Fix CI : le workflow ne compile pas (erreur YAML)
+
+Régression latente depuis le bootstrap : 100 % des runs GitHub Actions étaient des `startup_failure` (0 job, 0 s). Le lint/typecheck/tests ne passaient qu'en local — la CI n'avait en réalité jamais tourné. Prérequis bloquant du Sprint 2 (les PR ne peuvent être validées sans CI verte).
+
+- Cause racine `ci.yml` L119 : `run: npm ci || echo "Sprint 0: mobile/ pas encore initialisé"`. Le `run:` est un scalaire YAML *plain* (les `"` ne quotent que pour le shell, pas pour YAML) ; le `0: ` (deux-points + espace) est lu comme un indicateur de mapping → `mapping values are not allowed here` → fichier entier invalide → GitHub ne crée aucun job.
+- Correctif L119 : message reformulé sans `: ` ni accent (`mobile non initialise (arrive au Sprint 5)`), scalaire YAML sûr.
+- Défaut secondaire `mobile-checks` : `actions/setup-node@v4` avec `cache: npm` + `cache-dependency-path: mobile/package-lock.json` alors que `mobile/` ne contient qu'un `.gitkeep` jusqu'au Sprint 5. Le step `setup-node` (non `continue-on-error`) aurait fait échouer le job même après le fix YAML. Cache npm retiré du job mobile (commentaire explicatif ajouté).
+- Jobs `web-*` inchangés : `web/package-lock.json` présent, 33 TU verts en local, pages `/` et `/about` statiques (build sans DB).
+
+Tests validés :
+- `yaml.safe_load(ci.yml)` → fichier valide (avant : `ScannerError` L119), `name` + `on` + 3 jobs parsés
+- Run CI sur la PR : jobs effectivement créés (plus de `startup_failure`, `jobs` non vide)
+- `web-tests`, `mobile-checks`, `web-e2e-lighthouse` au vert
+
+---
+
+### Issue #40 — [2.0bis] Bump actions checkout/setup-node v4 → v5
+
+Le premier run CI réellement exécuté (PR #39) a remonté une dépréciation datée : `actions/checkout@v4` et `actions/setup-node@v4` tournent sur Node 20, bascule forcée Node 24 le 2026-06-02 puis retrait du runner le 2026-09-16. Échéance en plein Sprint 2 → correctif préventif pour éviter une nouvelle régression CI.
+
+- `actions/checkout@v4` → `@v5` (3 occurrences)
+- `actions/setup-node@v4` → `@v5` (3 occurrences)
+- Aucun autre changement (pas de modif des steps, du cache web ni du job mobile)
+
+Tests validés :
+- Run CI sur la PR vert (3 jobs)
+- Plus d'annotation de dépréciation Node 20 dans le run
+
+---
+
+### Issue #42 — [2.1] Baseline migration Prisma init committée
+
+Le schéma `Project` / `Tag` / `ProjectTag` (+ `User` / `Article`) existait depuis le Sprint 0 (#6) mais aucune migration n'était versionnée — `prisma migrate deploy` (CI/prod) et les tests TF API (#2.9) étaient bloqués. Création d'une **baseline** sans toucher à la DB de dev.
+
+- `npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script` → `web/prisma/migrations/20260516000000_init/migration.sql` (6 tables, 2 enums `ProjectStatus`/`ArticleStatus`, index `slug`/`status`/`is_featured`/`created_at`, FK `project_tags`/`article_tags` ON DELETE CASCADE)
+- `web/prisma/migrations/migration_lock.toml` (`provider = "postgresql"`)
+- `.gitignore` : suppression de `web/prisma/migrations/dev/` (pattern erroné) — les migrations sont versionnées par convention Prisma
+- DB de dev déjà créée côté Léon : à marquer appliquée sans rejouer via `npx prisma migrate resolve --applied 20260516000000_init` (documenté en note PR)
+
+Tests validés :
+- SQL généré par Prisma lui-même depuis `schema.prisma` (méthode canonique d'init), cohérent avec le MLD
+- `npx prisma validate` → schéma valide
+- CI `web-tests` verte (lint + typecheck + prisma generate + 33 TU)
+
+---
+
+### Issue #43 — [2.2] Seed enrichi : 5 projets publiés + tags
+
+Le seed avait 3 projets (2 publiés, 1 draft). Planning_Scrum §5 demande 5 projets pour alimenter `/projets` et la section "Projets phares" de la home. Enrichissement à 5 projets publiés + 1 draft, 3 `isFeatured`.
+
+- `web/prisma/seed.ts` : ajout de `tasknest` (publié, featured), `devbox-cli` (publié), `homelab-iac` (publié). Conservation de `leon-portfolio`, `cesizen` (publiés, featured) et `demo-project` (draft)
+- Données réalistes : `summary`, `content` Markdown structuré, `repoUrl`, `tagSlugs` mappés sur les 8 tags existants (aucun tag orphelin, pas de nouveau tag)
+- Idempotence conservée : `upsert` par slug, `projectTag.deleteMany` + recréation des liaisons
+- Récap console enrichi : compte publiés / draft / featured
+
+Tests validés :
+- `npx tsc --noEmit` → 0 erreur (seed.ts couvert par le tsconfig `**/*.ts`)
+- `npx eslint prisma/seed.ts` → 0 warning
+- CI `web-tests` verte
+- 5 projets PUBLISHED + 1 DRAFT, 3 featured (≥3 requis pour la home)
+
+---
+
+### Issue #44 — [2.3] Page /projets + prisma.project.findMany (+ swap mock home)
+
+Catalogue `/projets` (mode `tech`) alimenté par Prisma, et bascule de la section "Projets phares" de la home du mock vers la base — clôture la dette du Sprint 1 (#26).
+
+- `lib/projects.ts` : `getPublishedProjects()` / `getFeaturedProjects(take)` (`findMany` PUBLISHED [+ `isFeatured`], `include` tags, `orderBy createdAt desc`). `mapProjectToCard` aplatit les tags et dérive un gradient déterministe du slug (visuel sans upload). Fallback `FEATURED_PROJECTS` (mock) si la DB échoue ou liste vide.
+- **Import Prisma paresseux** (`await import("@/lib/prisma")` dans le try) : `next build` sans `DATABASE_URL` ne plante plus à l'import — la construction du client est dans le try/catch.
+- Split présentationnel : `FeaturedProjectsView` / `ProjectsListView` (purs, testables sync) + `FeaturedProjects` / `app/projets/page.tsx` (Server Components async).
+- `app/projets/page.tsx` : `metadata`, `dynamic = "force-dynamic"` (pas de pré-rendu DB au build), h1 + intro mode tech, grille responsive 1/2/3, état vide accessible (`role="status"`).
+- `app/page.tsx` : `revalidate = 300` (ISR — featured rafraîchi en prod, build retombe sur le mock).
+
+Couvre US-PJ-01 ; clôt la note Sprint 2 de #26.
+
+Tests validés :
+- `npm run test:run` → **40 tests passants** (33 + Data 5 + ProjectsListView 2, FeaturedProjects → FeaturedProjectsView)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès : `/` statique (revalidate 5m, fallback mock sans DB), `/projets` dynamique (`ƒ`), aucune route ne casse sans base
+
+---
+
+### Issue #45 — [2.4] Filtres tags (chips) avec synchronisation URL
+
+Filtrage par tags sur `/projets`, état porté par l'URL (`?tags=docker,nextjs`), rendu **100 % côté serveur** (liens, pas de JS client) : partageable, rechargeable, accessible nativement.
+
+- `lib/tag-filter.ts` (pur) : `parseSelectedTags` (split/trim/lowercase/dédoublonne, supporte la clé répétée) + `toggleTagHref` (bascule un tag, tri canonique, retour `/projets` si vide)
+- `lib/projects.ts` : `getPublishedProjects(tagSlugs)` ajoute `where.tags.some.tag.slug.in` (OR — au moins un tag) ; `getAllTags()` (`tag.findMany` trié, fallback tags dérivés du mock)
+- `components/sections/TagFilter.tsx` : `<nav aria-label>` + chip "Tous" (reset) + un `<Link>` par tag ; tag actif = `aria-current="true"` + `aria-label` "Retirer le filtre X", focus visible
+- `app/projets/page.tsx` : `searchParams` (Promise Next 16) → `parseSelectedTags`, `Promise.all` projets filtrés + tags, compteur `aria-live`, état vide réutilisé
+
+Couvre US-PJ-05.
+
+Tests validés :
+- `npm run test:run` → **51 tests passants** (40 + tag-filter 6 + TagFilter 3 + getAllTags/filtre 2)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès (`/projets` `ƒ` dynamique)
+
+---
+
+### Issue #46 — [2.5] Page /projets/[slug] : détail + 404 propre
+
+Page détail projet (mode `tech`) avec 404 Next propre si le slug est inconnu ou le projet en DRAFT, et métadonnées dynamiques.
+
+- `lib/projects.ts` : `getProjectBySlug(slug)` → `findUnique` + garde `status === PUBLISHED` (sinon `null` → 404). `ProjectDetail` (avec `content`), `mapProjectToDetail`. Fallback mock (slug connu) si DB KO, `null` sinon
+- `components/sections/ProjectDetailView.tsx` (pur) : retour catalogue, bannière gradient, h1, résumé, chips tags, liens repo/démo (`rel="noopener noreferrer"`), corps `whitespace-pre-line` (MDX riche → V2), fallback résumé si pas de contenu
+- `app/projets/[slug]/page.tsx` : `dynamic = "force-dynamic"`, `generateMetadata` (title + description + OpenGraph), `notFound()` si `null`
+
+Couvre US-PJ-02.
+
+Tests validés :
+- `npm run test:run` → **57 tests passants** (51 + ProjectDetailView 2 + getProjectBySlug 4)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/projets/[slug]` rendu `ƒ` (dynamique, pas de DB au build)
+
+---
+
+### Issue #47 — [2.6] GitHubService + cache ISR 24h
+
+Service isolé d'accès aux repos publics GitHub de `LeonHEU-cesi`, caché 24h, qui ne casse jamais la page (dégradation propre).
+
+- `lib/services/github.ts` : `fetchPublicRepos(fetchImpl = fetch)` — `fetch` injectable pour les tests ; `Authorization: Bearer` si `GITHUB_TOKEN` présent, `Accept` + `User-Agent` ; exclut forks/archivés, tri par stars desc ; **renvoie `[]`** sur erreur réseau / quota / 4xx-5xx / token absent (jamais d'exception)
+- `getCachedPublicRepos` = `unstable_cache(..., { revalidate: 86400, tags: ["github-repos"] })` → 1 appel réseau / jour max
+- Type `GitHubRepo` exporté (consommé par #2.7)
+
+Couvre US-PJ-04 (partie service).
+
+Tests validés :
+- `npm run test:run` → **61 tests passants** (57 + github-service 4 : mapping/tri/exclusion forks, en-tête token, non-OK→[], exception→[])
+- `npm run lint` / `npm run typecheck` → 0
+- Build vérifié en CI (module non encore monté sur une route)
+
+---
+
+### Issue #48 — [2.7] Section "Mes repos publics" sur /projets
+
+Affichage des repos publics GitHub sous le catalogue, alimenté par le cache 24h de #2.6.
+
+- `components/sections/GitHubRepos.tsx` : `GitHubReposView` (pur) — masquée totalement si liste vide (aucun message d'erreur visible) ; `GitHubRepos` (server async) lit `getCachedPublicRepos()` et limite à 9
+- Cartes compactes : nom (lien externe `rel="noopener noreferrer" target="_blank"`), description, langage, ★ stars (`aria-label`)
+- Montée dans `app/projets/page.tsx` sous la grille (page déjà `force-dynamic` → pas d'appel réseau au build)
+
+Couvre US-PJ-04 (UI).
+
+Tests validés :
+- `npm run test:run` → **63 tests passants** (61 + GitHubRepos 2 : rendu + dégradation silencieuse)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/projets` reste `ƒ` (cache GitHub non exécuté au build)
+
+---
+
+### Issue #49 — [2.8] Animations cards hover (Framer Motion) — raffinement
+
+Harmonisation et polissage des animations hover des cartes, transform/opacity uniquement (zéro layout shift), respect strict de `prefers-reduced-motion`.
+
+- `FeaturedProjectCard` : hover affiné (`y:-6`, `scale:1.015`, ressort ajusté), highlight de bordure + ombre en `transition-[box-shadow,border-color]`, léger zoom du visuel (`group-hover:scale-105`, parent `overflow-hidden` → pas de débordement). `whileHover` toujours neutralisé si `usePrefersReducedMotion`
+- `GitHubRepos` : lift cohérent sur les cartes repo (`hover:-translate-y-1` + highlight bordure) en CSS pur — neutralisé par la règle globale `prefers-reduced-motion` (#11)
+- Cohérence catalogue / featured / repos
+
+Couvre US-PJ-01 (animations).
+
+Tests validés :
+- `npm run test:run` → **65 tests passants** (63 + FeaturedProjectCard 2 : rendu + chemin reduced-motion)
+- `npm run lint` / `npm run typecheck` → 0
+- Build vérifié en CI (changement purement CSS/anim, aucune route modifiée)
+
+---
+
+### Issue #50 — [2.9] Tests TF API /api/projects + mock GitHub
+
+Tests fonctionnels de la couche données projets sur une **vraie base Postgres** (pas de mock Prisma), exécutés en CI sur le service `postgres` après `prisma migrate deploy` (rendu possible par la baseline #2.1).
+
+- `vitest.config.ts` : 3e projet `tf` (environment `node`, `tests/tf/**/*.tf.test.ts`)
+- `package.json` : script `test:tf` (`vitest run --project tf`)
+- `tests/tf/projects.tf.test.ts` : `describe.skip` si pas de `DATABASE_URL` (local propre), sinon seed isolé (préfixe `tf-`, cleanup avant/après) + assertions sur `getPublishedProjects` (exclut DRAFT), filtre tag, `getProjectBySlug` (publié / DRAFT→null / inconnu→null), `getAllTags`, et `fetchPublicRepos` (fetch stubbé) — TF-PJ-01 à 04
+- `ci.yml` (`web-tests`) : ajout `prisma migrate deploy` (DB de service) + step `npm run test:tf`
+
+Couvre Cahier de tests TF-PJ-01 à TF-PJ-04.
+
+Tests validés :
+- Local : `test:run` 65 verts, `test:tf` 6 *skipped* proprement (pas de DB)
+- `npm run lint` / `npm run typecheck` → 0
+- **CI `web-tests`** : `migrate deploy` OK + 6 TF verts sur la DB de service (preuve empirique sur la PR)
+
+---
+
+### Issue #51 — [2.10] Tests E2E Playwright : parcours catalogue → détail
+
+Première vraie suite Playwright (vide depuis le Sprint 0), rendue **bloquante** en CI.
+
+- `@playwright/test@^1.60` ajouté (devDep ; `playwright` 1.60 déjà présent), script `test:e2e`
+- `playwright.config.ts` : `testDir tests/e2e`, projet chromium, `webServer: npm run start` (sert le build du step CI), `reuseExistingServer: !CI`, retries CI
+- `FeaturedProjectCard` : titre désormais lien interne vers `/projets/[slug]` (lien manquant — requis pour le parcours catalogue → détail, bénéficie aussi à la home)
+- `tests/e2e/projets.e2e.spec.ts` : TE-01 (catalogue affiché) + TE-03 (filtre tag → URL `?tags=`, carte → détail, retour). Déterministe sans DB grâce au fallback mock (#2.3)
+- `ci.yml` (`web-e2e-lighthouse`) : step Playwright **bloquant** (retrait de `--if-present` + `continue-on-error`)
+
+Couvre Cahier de tests TE-01, TE-03.
+
+Tests validés :
+- Local : `lint` / `typecheck` 0, `test:run` **65 verts** (lien carte intégré sans régression)
+- **CI `web-e2e-lighthouse`** : `Playwright E2E` vert et bloquant (preuve empirique sur la PR)
+
+---
+
+### Issue #52 — [2.11] Sprint 2 review + release v0.3.0
+
+Clôture du Sprint 2 : revue, release develop→main, tag `v0.3.0`.
+
+- `Docs/claude/Sprint docs/sprint2-projets.md` : issues + PRs, stack/versions, décisions (CI réparée, baseline Prisma, résilience build, tests 3 niveaux), dette, métriques (65 TU / 6 TF / 2 E2E), DoD §5 cochée, préparation Sprint 3
+- PR `release: Sprint 2 - Projets` develop→main (merge commit, historique préservé)
+- Tag `v0.3.0` + `gh release` ; milestone `M2 - Projets` fermée
+- Mémoire projet mise à jour (correction : la CI n'avait jamais compilé avant le Sprint 2)
+
+Tests validés :
+- Récap conforme au format Sprint 1, versions cohérentes
+- Toutes les issues Sprint 2 closed sur le Board, M2 fermée
+- CI verte sur `develop` (3 jobs) avant release
+
+---
