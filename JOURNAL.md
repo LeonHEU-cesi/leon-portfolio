@@ -1008,3 +1008,20 @@ Tests validés :
 - `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
 
 ---
+
+### Issue #125 — [5.1] Init projet Expo SDK 54 dans mobile/
+
+Scaffold de l'app Expo dans `mobile/` (suppression `.gitkeep`).
+
+- `npx create-expo-app@latest mobile --template default` (Expo **SDK 54.0.33**, React Native 0.81, expo-router 6, TypeScript, reanimated 4 déjà inclus)
+- **Fichiers IA supprimés** : `mobile/AGENTS.md`, `mobile/CLAUDE.md`, `mobile/.claude/` (générés par le scaffold, interdits par la méthodo)
+- `package.json` : ajout script `typecheck` (`tsc --noEmit`)
+- `mobile/.gitignore` du template (node_modules/.expo/dist ignorés) ; `node_modules` non commité
+
+Couvre US-MOB-01.
+
+Tests validés :
+- `mobile` : `npm run typecheck` exit 0, `npm run lint` (expo lint) exit 0
+- Aucun fichier IA résiduel ; web inchangé (CI web verte, `mobile-checks` tolérant jusqu'à #5.13)
+
+---
