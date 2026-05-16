@@ -856,3 +856,18 @@ Tests validés :
 - `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
 
 ---
+
+### Issue #98 — [4.9] /admin/projects/new + Server Action create
+
+- `lib/project-input.ts` (pur) : `slugify` + `validateProjectInput(FormData)` (titre/résumé requis, slug auto, statut, tags CSV slugifiés/dédoublonnés)
+- `app/admin/projects/actions.ts` (`"use server"`) : `persist` partagé → `createProject`/`updateProject`/`deleteProject` ; slug unique vérifié, tags `connectOrCreate`, `revalidatePath` + `redirect` hors try (NEXT_REDIRECT non avalé)
+- `components/admin/ProjectForm.tsx` (client, réutilisable create/edit) : `useActionState`, champs labellisés, `role="alert"`, action injectée
+- `app/admin/projects/new/page.tsx` : `robots noindex`
+
+Couvre US-AD-04 (création).
+
+Tests validés :
+- `npm run test:run` → **114 tests passants** (109 + project-input 4 + ProjectForm 1)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
