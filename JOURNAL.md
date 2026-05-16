@@ -738,3 +738,19 @@ Tests validés :
 - CI verte (branch protection désormais active sur develop/main)
 
 ---
+
+### Issue #91 — [4.2] Seed admin — robustification + garde secret
+
+Le seed (#14) crée déjà 1 admin idempotent (`upsert`, bcrypt cost 12, env-driven). Robustification avant l'arrivée de l'auth.
+
+- `lib/admin-guard.ts` (pur) : `isPlaceholderSecret` (vide / < 12 car. / placeholder connu)
+- `prisma/seed.ts` : avertissement non bloquant si `ADMIN_PASSWORD` faible/défaut ou `AUTH_SECRET` absent/faible (hygiène avant Sprint 4 Auth.js) ; ne logue jamais le mot de passe
+- `.env.example` : ajout `ADMIN_NAME`
+- Idempotence/cost 12 confirmés (inchangés)
+
+Tests validés :
+- `npm run test:run` → **92 tests passants** (89 + admin-guard 3)
+- `npm run lint` / `npm run typecheck` → 0
+- CI verte (3 checks, branch protection)
+
+---
