@@ -5,7 +5,7 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-import { validateUpload } from "@/lib/upload";
+import { validateUpload, verifyMagicBytes } from "@/lib/upload";
 
 // Upload image admin : auth obligatoire, validation, resize + webp
 // (sharp en import paresseux → pas de charge au build), stockage volume.
@@ -28,6 +28,14 @@ export async function POST(request: Request) {
 
   try {
     const input = Buffer.from(await file.arrayBuffer());
+
+    // Vérification magic-bytes : le contenu réel doit correspondre au
+    // type déclaré (défense au-delà de l'extension/MIME annoncé).
+    const magic = verifyMagicBytes(file.type, new Uint8Array(input.subarray(0, 12)));
+    if (!magic.ok) {
+      return NextResponse.json({ error: magic.error }, { status: 400 });
+    }
+
     const sharp = (await import("sharp")).default;
     const output = await sharp(input)
       .resize(1600, 1600, { fit: "inside", withoutEnlargement: true })
