@@ -11,12 +11,12 @@ export function FeaturedProjectCard({ project }: { project: FeaturedProject }) {
 
   return (
     <motion.article
-      whileHover={prefersReduced ? undefined : { y: -4, scale: 1.01 }}
-      transition={{ type: "spring", stiffness: 200, damping: 20 }}
-      className="group flex flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--muted)] transition-shadow hover:shadow-[var(--shadow-medium)]"
+      whileHover={prefersReduced ? undefined : { y: -6, scale: 1.015 }}
+      transition={{ type: "spring", stiffness: 220, damping: 22 }}
+      className="group flex flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--muted)] transition-[box-shadow,border-color] duration-200 hover:border-[var(--primary)] hover:shadow-[var(--shadow-medium)]"
     >
       <div
-        className="aspect-[16/10] w-full"
+        className="aspect-[16/10] w-full transition-transform duration-500 group-hover:scale-105"
         style={{ background: project.imageGradient }}
         aria-hidden="true"
       />

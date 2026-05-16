@@ -28,7 +28,7 @@ export function GitHubReposView({ repos }: { repos: ReadonlyArray<GitHubRepo> })
         {repos.map((repo) => (
           <li
             key={repo.name}
-            className="flex flex-col gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-5"
+            className="flex flex-col gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-5 transition-[transform,border-color] duration-200 hover:-translate-y-1 hover:border-[var(--primary)]"
           >
             <Link
               href={repo.htmlUrl}

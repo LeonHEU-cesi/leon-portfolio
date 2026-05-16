@@ -446,3 +446,20 @@ Tests validés :
 - `npm run build` → succès, `/projets` reste `ƒ` (cache GitHub non exécuté au build)
 
 ---
+
+### Issue #49 — [2.8] Animations cards hover (Framer Motion) — raffinement
+
+Harmonisation et polissage des animations hover des cartes, transform/opacity uniquement (zéro layout shift), respect strict de `prefers-reduced-motion`.
+
+- `FeaturedProjectCard` : hover affiné (`y:-6`, `scale:1.015`, ressort ajusté), highlight de bordure + ombre en `transition-[box-shadow,border-color]`, léger zoom du visuel (`group-hover:scale-105`, parent `overflow-hidden` → pas de débordement). `whileHover` toujours neutralisé si `usePrefersReducedMotion`
+- `GitHubRepos` : lift cohérent sur les cartes repo (`hover:-translate-y-1` + highlight bordure) en CSS pur — neutralisé par la règle globale `prefers-reduced-motion` (#11)
+- Cohérence catalogue / featured / repos
+
+Couvre US-PJ-01 (animations).
+
+Tests validés :
+- `npm run test:run` → **65 tests passants** (63 + FeaturedProjectCard 2 : rendu + chemin reduced-motion)
+- `npm run lint` / `npm run typecheck` → 0
+- Build vérifié en CI (changement purement CSS/anim, aucune route modifiée)
+
+---
