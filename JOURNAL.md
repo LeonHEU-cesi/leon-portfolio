@@ -1306,3 +1306,18 @@ Tests validés :
 - Doc cohérente avec les composants livrés (landmarks, aria, aria-live, role=img)
 
 ---
+
+### Issue #163 — [6.10] OG images dynamiques + JSON-LD Person
+
+- `lib/json-ld.ts` (pur) : `personJsonLd()` (schema.org Person, données constantes)
+- `app/layout.tsx` : `<script type="application/ld+json">` (statique, pas d'input user → sûr cf. #6.3)
+- `app/opengraph-image.tsx` : OG marque (ImageResponse `next/og`, 1200×630, statique)
+- `app/projets/[slug]/opengraph-image.tsx` : OG par projet (titre+résumé via `getProjectBySlug` fallback, dynamique)
+
+Couvre US-TR-06.
+
+Tests validés :
+- `npm run test:run` → **139 tests passants** (138 + json-ld 1)
+- `npm run lint`/`typecheck` exit 0 ; `npm run build` → `/opengraph-image` `○`, `/projets/[slug]/opengraph-image` `ƒ`
+
+---
