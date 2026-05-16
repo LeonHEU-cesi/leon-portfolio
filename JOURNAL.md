@@ -705,3 +705,19 @@ Tests validés :
 - CI `web-e2e-lighthouse` verte et bloquante avant merge (vérifiée)
 
 ---
+
+### Issue #75 — [3.11] Sprint 3 review + release v0.4.0
+
+Clôture du Sprint 3 : revue, release develop→main, tag `v0.4.0`.
+
+- `Docs/claude/Sprint docs/sprint3-cv-contact-recherche.md` : issues + PRs, stack (qrcode, fuse.js), décisions (print sans Pandoc, recherche vs filtre, incident merge CI rouge #85→#86 + process corrigé), dette (recommandation branch protection), métriques (89 TU / 6 TF / 5 E2E), DoD §6 cochée, prépa Sprint 4 (Admin)
+- PR `release: Sprint 3 - CV / Contact / Recherche` develop→main (merge commit)
+- Tag `v0.4.0` + `gh release` ; milestone `M3` fermée
+- Mémoire projet mise à jour
+
+Tests validés :
+- Récap conforme au format Sprint 2, versions cohérentes
+- Toutes les issues Sprint 3 closed sur le Board, M3 fermée
+- CI verte sur `develop` avant release
+
+---
