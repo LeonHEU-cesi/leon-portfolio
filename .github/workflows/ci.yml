@@ -123,24 +123,26 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # Pas de cache npm ici : mobile/ ne contient pas encore de
-      # package-lock.json (initialisation reportee au Sprint 5).
       - uses: actions/setup-node@v5
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
 
       - name: Install
-        run: npm ci || echo "mobile non initialise (arrive au Sprint 5)"
-        continue-on-error: true
+        run: npm ci
 
-      - name: Expo doctor
-        run: npx expo-doctor || true
-        continue-on-error: true
+      - name: Lint
+        run: npm run lint
 
       - name: Typecheck
-        run: npx tsc --noEmit --skipLibCheck || true
-        continue-on-error: true
+        run: npm run typecheck
 
       - name: Jest
-        run: npm test --if-present
+        run: npm test
+
+      # expo-doctor reste toléré : remonte des avertissements bénins
+      # (versions de deps) qui ne doivent pas bloquer la CI.
+      - name: Expo doctor
+        run: npx expo-doctor || true
         continue-on-error: true
