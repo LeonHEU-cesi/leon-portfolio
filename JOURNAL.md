@@ -429,3 +429,20 @@ Tests validés :
 - Build vérifié en CI (module non encore monté sur une route)
 
 ---
+
+### Issue #48 — [2.7] Section "Mes repos publics" sur /projets
+
+Affichage des repos publics GitHub sous le catalogue, alimenté par le cache 24h de #2.6.
+
+- `components/sections/GitHubRepos.tsx` : `GitHubReposView` (pur) — masquée totalement si liste vide (aucun message d'erreur visible) ; `GitHubRepos` (server async) lit `getCachedPublicRepos()` et limite à 9
+- Cartes compactes : nom (lien externe `rel="noopener noreferrer" target="_blank"`), description, langage, ★ stars (`aria-label`)
+- Montée dans `app/projets/page.tsx` sous la grille (page déjà `force-dynamic` → pas d'appel réseau au build)
+
+Couvre US-PJ-04 (UI).
+
+Tests validés :
+- `npm run test:run` → **63 tests passants** (61 + GitHubRepos 2 : rendu + dégradation silencieuse)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/projets` reste `ƒ` (cache GitHub non exécuté au build)
+
+---

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { GitHubRepos } from "@/components/sections/GitHubRepos";
 import { ProjectsListView } from "@/components/sections/ProjectsList";
 import { TagFilter } from "@/components/sections/TagFilter";
 import { getAllTags, getPublishedProjects } from "@/lib/projects";
@@ -57,6 +58,8 @@ export default async function ProjetsPage({
         </p>
 
         <ProjectsListView projects={projects} />
+
+        <GitHubRepos />
       </div>
     </section>
   );
