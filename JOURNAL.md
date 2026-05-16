@@ -1377,3 +1377,17 @@ Tests validés :
 - `grep eslint-disable.*react-hooks` → **0** ; `npm run test:run` **139** ; `lint`/`typecheck`/`build` exit 0
 
 ---
+
+### Issue #169 — [6.16] Sprint 6 review + release v0.7.0
+
+Clôture Sprint 6 (timeboxée — #6.12 DNS/staging en attente externe).
+
+- `Docs/claude/Sprint docs/sprint6-hardening.md` : 14/15 issues codables + PRs, décisions sécu/perf/a11y/SEO/infra, dette restante, métriques (139 TU / 16 E2E / 14 TF, 0 eslint-disable), DoD §9 (hors déploiement live), prépa Sprint 7, incident process branch-protection
+- PR `release: Sprint 6 - Hardening` develop→main (merge commit), tag `v0.7.0`, M6 fermée (timebox ; #165 ouverte documentée), `gh release`
+- Mémoire mise à jour
+
+Tests validés :
+- Récap conforme au format Sprint 5 ; toutes les issues codables Sprint 6 closed ; #165 explicitement externe
+- CI verte sur `develop` avant release
+
+---
