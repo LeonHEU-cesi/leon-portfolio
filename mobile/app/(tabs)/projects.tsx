@@ -1,12 +1,18 @@
 import { Link } from 'expo-router';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+} from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useProjects } from '@/hooks/use-projects';
 
 export default function ProjectsScreen() {
-  const { data, isLoading, isError } = useProjects();
+  const { data, isLoading, isError, refetch, isRefetching } = useProjects();
 
   if (isLoading) {
     return (
@@ -36,6 +42,9 @@ export default function ProjectsScreen() {
         data={projects}
         keyExtractor={(item) => item.slug}
         contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+        }
         ListEmptyComponent={<ThemedText>Aucun projet pour le moment.</ThemedText>}
         renderItem={({ item }) => (
           <Link href={`/projects/${item.slug}`} asChild>
