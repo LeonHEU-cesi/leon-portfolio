@@ -1338,3 +1338,18 @@ Tests validés :
 - `deploy-staging.yml` no-op vérifié (gate secrets) — n'impacte pas la CI requise
 
 ---
+
+### Issue #165 — [6.12] DNS staging + certificat
+
+⚠ **Étape Léon** (registrar OVH + VM Proxmox + secrets GitHub) — non automatisable. Config livrée (#164). Issue **ouverte**, procédure documentée (`deploiement-staging.md` §2/§3, commentaire d'issue). Sprint timeboxé.
+
+---
+
+### Issue #166 — [6.13] MAJ Plan_developpement.md (versions réelles)
+
+Rattrapage dette : tableau stack du `Plan_developpement.md` réaligné sur les versions réellement installées (Next **16.2.6**, Prisma **6.19.3**, Storybook **10.4**, Vitest **4.1.6**, next-auth **v5-beta.31**, Expo **54**, reanimated 4, TanStack 5, jest-expo 55, @lhci/cli, @axe-core/playwright, sharp, fuse, qrcode) + lignes non implémentées marquées honnêtement (shadcn, RHF/Zod, axios, expo-secure-store, zod-to-openapi → V2/non utilisés) + mentions API publique / mobile / staging / sécurité. Résidus "Next.js 15" corrigés (prose + arborescence).
+
+Tests validés :
+- Cohérence avec le code et `project_stack` mémoire ; aucune version obsolète résiduelle
+
+---

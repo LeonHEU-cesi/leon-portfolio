@@ -28,7 +28,7 @@
 
 Le projet livre **deux surfaces** consommant la même API REST documentée OpenAPI :
 
-1. **Web (Next.js 15)** — Front public (visiteurs) + back-office admin (toi) + API Route Handlers
+1. **Web (Next.js 16)** — Front public (visiteurs) + back-office admin (toi) + API Route Handlers publics
 2. **App mobile (Expo SDK 54)** — Compagnon en lecture pour catalogue projets, About, Contact
 
 ### 1.3 Répartition Web / Mobile
@@ -72,39 +72,45 @@ Le projet livre **deux surfaces** consommant la même API REST documentée OpenA
 
 ### 2.1 Stack complète
 
-| Couche | Technologie | Version cible | Justification |
+> **Versions réelles (mises à jour Sprint 6, #6.13)** — alignées sur le
+> code et `~/.claude/.../project_stack`. Plusieurs versions sont
+> supérieures aux cibles initiales (conservées car rétro-compatibles).
+
+| Couche | Technologie | Version réelle | Note |
 |---|---|---|---|
-| Framework web full-stack | Next.js | 15.x | App Router, RSC, Server Actions, ISR, SEO natif |
-| Langage | TypeScript | 5.x strict | Type-safety end-to-end web et mobile |
-| Styling | Tailwind CSS | v4 | Mobile First natif, JIT, dark mode classe |
-| Composants UI web | shadcn/ui + Radix Primitives | latest | Accessibles ARIA, customisables, copy-paste |
-| Animations web | GSAP + Framer Motion | 3.x / 12.x | Scroll-driven (GSAP) + transitions de page (Framer) |
-| Forms | React Hook Form + Zod | latest | Validation typée client+serveur, error mapping |
-| ORM | Prisma | 5.x | Migrations propres, type-safe, query builder |
-| Base de données | PostgreSQL | 16 | Standard pro, JSONB, full-text search |
-| Auth | Auth.js (NextAuth v5) | 5.x | Credentials provider + sessions cookie + JWT mobile |
-| Hash mdp | bcrypt | 5.x | Standard, cost 12 |
-| API mobile | Next.js Route Handlers + axios mobile | — | API REST commune web et mobile |
-| Mobile | Expo SDK | 54+ / RN 0.81+ | Build EAS, Expo Go dev, expo-router |
-| Navigation mobile | expo-router | v4 | File-based, conventions Next-like |
-| Animations mobile | React Native Reanimated | 3.x | 60fps, worklets natifs |
-| HTTP client mobile | axios + TanStack Query | latest | Cache, retry, invalidation, infinite scroll |
-| Stockage sécurisé mobile | expo-secure-store | latest | Keychain iOS / EncryptedSharedPreferences Android |
-| Design System | Storybook | 8.x | Composants documentés, tests visuels |
-| Documentation API | zod-to-openapi + Scalar API Reference | latest | OpenAPI 3.1 généré depuis schémas Zod |
-| Conteneurisation | Docker + Docker Compose | latest | Stack reproductible dev + prod |
-| Reverse proxy prod | Caddy | 2.x | TLS auto Let's Encrypt, config minimale |
-| Hébergement prod | Proxmox VE | 8.x | VM Debian 12 + Docker stack |
-| Build mobile | EAS Build | — | Free tier suffit pour APK demo |
-| Tests unitaires | Vitest | 2.x | Rapide, ES modules natif |
-| Tests fonctionnels API | Vitest + Prisma testcontainers | latest | Postgres éphémère par run |
-| Tests E2E | Playwright | latest | Chromium + WebKit + Firefox |
-| Tests perf | Lighthouse CI | latest | Budgets bloquants en CI |
-| CI | GitHub Actions | — | 3 jobs : web / mobile / docs |
+| Framework web full-stack | Next.js | **16.2.6** | App Router, RSC, Server Actions, ISR ; `output: standalone` (Docker) |
+| Langage | TypeScript | 5.x strict (`noUncheckedIndexedAccess`) | ✅ |
+| Styling | Tailwind CSS | v4 | tokens OKLCH, custom variants dark/editorial/tech |
+| Composants UI web | Tailwind direct (pas shadcn/Radix V1) | — | shadcn non installé ; composants maison |
+| Animations web | gsap **3.15** + framer-motion **12.38** | ✅ | Hero scroll + micro-interactions, reduced-motion |
+| Forms / validation | Server Actions + validateurs purs (`*-input.ts`) | — | React Hook Form/Zod non utilisés (validateurs testés unitairement) |
+| ORM | Prisma | **6.19.3** | downgrade volontaire vs 7 ; baseline migration versionnée |
+| Base de données | PostgreSQL | **16-alpine** | dev compose + staging |
+| Auth | Auth.js (next-auth) | **^5.0.0-beta.31** | Credentials + bcrypt, session JWT, split Edge/Node |
+| Hash mdp | **bcryptjs 3.x** | — | équivalent bcrypt, cost 12 |
+| API publique/mobile | Next.js Route Handlers `/api/projects(+/[slug])` + `fetch` | ✅ | JSON lecture + CORS (pas d'axios) |
+| Mobile | Expo SDK **54.0.33** / RN **0.81** | ✅ | expo-router, EAS preview configuré |
+| Navigation mobile | expo-router | **v6** | file-based (tabs) |
+| Animations mobile | react-native-reanimated | **4.1** | reduce-motion respecté |
+| Données mobile | **@tanstack/react-query 5** + `fetch` | ✅ | cache/refetch (pas d'axios) |
+| Stockage sécurisé mobile | — (non requis V1) | — | mobile en lecture, pas d'auth |
+| Design System | Storybook | **10.4.0** | stories tokens (extension écrans → V2) |
+| Documentation API | non implémenté V1 | — | zod-to-openapi/Scalar reporté V2 |
+| Conteneurisation | Docker + Compose | ✅ | dev + **staging** (#6.11) |
+| Reverse proxy | Caddy 2 | ✅ | `Caddyfile` prod + `Caddyfile.staging` (TLS auto) |
+| Hébergement | Proxmox VE (Debian 12) | cible | déploiement staging #6.11/#6.12 = étape Léon |
+| Build mobile | EAS Build | config `eas.json` preview | build cloud APK = étape Léon (#5.11) |
+| Tests unitaires | Vitest | **4.1.6** | projets `unit` (jsdom) + `tf` (node, vraie DB) |
+| Tests fonctionnels | Vitest projet `tf` sur Postgres CI (service) | ✅ | pas de testcontainers (service GitHub Actions) |
+| Tests E2E | Playwright **1.60** + @playwright/test + @axe-core/playwright | ✅ | chromium ; axe a11y bloquant |
+| Tests perf | @lhci/cli **0.15** | ✅ | budgets (a11y/bp/seo error, perf warn) |
+| Mobile tests | jest-expo **55** + @testing-library/react-native | ✅ | `mobile-checks` CI réel+bloquant |
+| Sécurité | Headers CSP/HSTS/X-Frame (#6.1), magic-bytes upload (#6.2), rate limit | ✅ | revue OWASP `pentest-owasp.md` |
+| CI | GitHub Actions | ✅ | 3 jobs (réparée S2, durcie) + `deploy-staging` (gardé) ; branch protection active |
 
 ### 2.2 Architecture (pas MVC strict)
 
-Next.js 15 + Prisma ne suivent pas le MVC classique. On retient une architecture **modulaire par feature** :
+Next.js 16 + Prisma ne suivent pas le MVC classique. On retient une architecture **modulaire par feature** :
 
 - **Routes** (`web/app/`) : pages RSC et Route Handlers (API)
 - **Composants** (`web/components/`) : UI atomique (shadcn), composés (sections), templates (layouts)
@@ -119,7 +125,7 @@ Cf. doc `pertinence-solution.md` pour la justification du choix Next.js full-sta
 
 ```
 leon-portfolio/
-├── web/                                 # Next.js 15 full-stack
+├── web/                                 # Next.js 16 full-stack
 │   ├── app/
 │   │   ├── (public)/                   # Routes publiques (visiteur)
 │   │   │   ├── page.tsx                # Accueil
