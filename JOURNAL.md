@@ -1223,3 +1223,16 @@ Tests validés :
 - `npm run lint` / `npm run typecheck` → exit 0
 
 ---
+
+### Issue #157 — [6.4] Pentest OWASP — rapport + tests sécu automatisés
+
+- `Docs/claude/leon-portfolio/pentest-owasp.md` : revue OWASP Top 10 2021 (A01..A10) appliquée au projet — statut + mitigations + durcissements reportés (CSP nonce, Dependabot, monitoring, pentest staging)
+- `tests/e2e/security.e2e.spec.ts` : en-têtes de sécurité (#6.1) servis sur `/` (CSP, X-Frame-Options DENY, nosniff, Referrer-Policy)
+
+Couvre TS-AUTH-* / TS-INPUT-*.
+
+Tests validés :
+- Local : `lint`/`typecheck`/`build` exit 0 ; `npm run test:e2e` → **8/8** (+ security headers)
+- **CI** : suite E2E bloquante verte (preuve sur la PR)
+
+---
