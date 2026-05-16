@@ -69,6 +69,39 @@ async function main() {
       tagSlugs: ["nextjs", "typescript", "postgres", "expo"],
     },
     {
+      slug: "tasknest",
+      title: "TaskNest",
+      summary: "Gestionnaire de tâches collaboratif temps réel — Next.js + WebSocket + Postgres.",
+      content:
+        "## Contexte\nApplication de gestion de tâches en équipe avec synchronisation temps réel.\n\n## Stack\nNext.js (App Router), TypeScript, Server Actions, WebSocket, PostgreSQL, Tailwind.\n\n## Démos\n- Tableau Kanban drag & drop\n- Présence collaborative live\n- Notifications optimistes",
+      repoUrl: "https://github.com/LeonHEU-cesi/tasknest",
+      status: ProjectStatus.PUBLISHED,
+      isFeatured: true,
+      tagSlugs: ["nextjs", "typescript", "postgres", "nodejs"],
+    },
+    {
+      slug: "devbox-cli",
+      title: "devbox-cli",
+      summary: "CLI de scaffolding de projets full-stack avec presets opinionnés.",
+      content:
+        "## Contexte\nOutil en ligne de commande pour générer des squelettes de projets normalisés (lint, CI, conventions).\n\n## Stack\nNode.js, TypeScript, commander, prompts, Docker.\n\n## Démos\n- Presets Next.js / API / lib\n- Génération CI GitHub Actions\n- Publié sur npm",
+      repoUrl: "https://github.com/LeonHEU-cesi/devbox-cli",
+      status: ProjectStatus.PUBLISHED,
+      isFeatured: false,
+      tagSlugs: ["nodejs", "typescript", "docker"],
+    },
+    {
+      slug: "homelab-iac",
+      title: "homelab-iac",
+      summary: "Infrastructure self-host as code — Proxmox + Docker Compose + Caddy.",
+      content:
+        "## Contexte\nDescription reproductible de mon homelab : VMs, conteneurs, reverse proxy, sauvegardes.\n\n## Stack\nDocker Compose, Caddy, scripts shell, Node.js (outillage), Proxmox.\n\n## Démos\n- Déploiement reproductible staging/prod\n- TLS automatique Let's Encrypt via Caddy\n- pg_dump + snapshot planifiés",
+      repoUrl: "https://github.com/LeonHEU-cesi/homelab-iac",
+      status: ProjectStatus.PUBLISHED,
+      isFeatured: false,
+      tagSlugs: ["docker", "nodejs"],
+    },
+    {
       slug: "demo-project",
       title: "Demo Project",
       summary: "Projet de démonstration pour tester le CRUD admin.",
@@ -112,10 +145,18 @@ async function main() {
     },
   });
 
+  const published = projectsData.filter(
+    (p) => p.status === ProjectStatus.PUBLISHED,
+  ).length;
+  const drafts = projectsData.length - published;
+  const featured = projectsData.filter((p) => p.isFeatured).length;
+
   console.log("Seed terminé.");
   console.log(`Admin: ${admin.email}`);
   console.log(`Tags: ${tags.length}`);
-  console.log(`Projets seedés.`);
+  console.log(
+    `Projets: ${projectsData.length} (${published} publiés, ${drafts} draft, ${featured} featured)`,
+  );
 }
 
 main()

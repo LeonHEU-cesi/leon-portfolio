@@ -341,3 +341,20 @@ Tests validés :
 - CI `web-tests` verte (lint + typecheck + prisma generate + 33 TU)
 
 ---
+
+### Issue #43 — [2.2] Seed enrichi : 5 projets publiés + tags
+
+Le seed avait 3 projets (2 publiés, 1 draft). Planning_Scrum §5 demande 5 projets pour alimenter `/projets` et la section "Projets phares" de la home. Enrichissement à 5 projets publiés + 1 draft, 3 `isFeatured`.
+
+- `web/prisma/seed.ts` : ajout de `tasknest` (publié, featured), `devbox-cli` (publié), `homelab-iac` (publié). Conservation de `leon-portfolio`, `cesizen` (publiés, featured) et `demo-project` (draft)
+- Données réalistes : `summary`, `content` Markdown structuré, `repoUrl`, `tagSlugs` mappés sur les 8 tags existants (aucun tag orphelin, pas de nouveau tag)
+- Idempotence conservée : `upsert` par slug, `projectTag.deleteMany` + recréation des liaisons
+- Récap console enrichi : compte publiés / draft / featured
+
+Tests validés :
+- `npx tsc --noEmit` → 0 erreur (seed.ts couvert par le tsconfig `**/*.ts`)
+- `npx eslint prisma/seed.ts` → 0 warning
+- CI `web-tests` verte
+- 5 projets PUBLISHED + 1 DRAFT, 3 featured (≥3 requis pour la home)
+
+---
