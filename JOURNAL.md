@@ -1049,3 +1049,18 @@ Tests validés :
 - `mobile` : `npm run typecheck` / `npm run lint` exit 0
 
 ---
+
+### Issue #128 — [5.4] Écran Projets : FlatList + TanStack Query
+
+- Deps : `@tanstack/react-query` + infra tests `jest-expo` (`@testing-library/react-native`, jest config preset + `moduleNameMapper @/`)
+- `lib/api.ts` : `fetchProjects`/`fetchProject` (base `EXPO_PUBLIC_API_URL` défaut prod, `fetch` injectable, 404→null, throw si !ok)
+- `lib/query-client.ts` (singleton) + `app/_layout.tsx` enveloppé `QueryClientProvider`
+- `hooks/use-projects.ts` : `useProjects` / `useProject`
+- `app/(tabs)/projects.tsx` : `FlatList` (cartes titre/résumé/tags), états loading/erreur/vide
+
+Couvre US-MOB-03 (consomme l'API #5.0).
+
+Tests validés :
+- `mobile` : `npm run typecheck` / `npm run lint` exit 0 ; `npm test` (jest-expo) → **5/5** (lib-api : mapping, !ok, 404, détail)
+
+---
