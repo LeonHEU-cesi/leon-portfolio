@@ -1,21 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const projectFindMany = vi.fn();
+const projectFindUnique = vi.fn();
 const tagFindMany = vi.fn();
 vi.mock("@/lib/prisma", () => ({
-  prisma: { project: { findMany: projectFindMany }, tag: { findMany: tagFindMany } },
+  prisma: {
+    project: { findMany: projectFindMany, findUnique: projectFindUnique },
+    tag: { findMany: tagFindMany },
+  },
 }));
 
 import { FEATURED_PROJECTS } from "@/lib/data/featured-projects";
 import {
   getAllTags,
   getFeaturedProjects,
+  getProjectBySlug,
   getPublishedProjects,
   mapProjectToCard,
 } from "@/lib/projects";
 
 beforeEach(() => {
   projectFindMany.mockReset();
+  projectFindUnique.mockReset();
   tagFindMany.mockReset();
 });
 
@@ -94,5 +100,51 @@ describe("getAllTags", () => {
     expect(tags.length).toBeGreaterThan(0);
     expect(tags[0]).toHaveProperty("slug");
     expect(tags[0]).toHaveProperty("name");
+  });
+});
+
+describe("getProjectBySlug", () => {
+  it("mappe un projet publié", async () => {
+    projectFindUnique.mockResolvedValue({
+      slug: "leon-portfolio",
+      title: "leon-portfolio",
+      summary: "résumé",
+      content: "## Contenu",
+      repoUrl: "https://repo",
+      demoUrl: null,
+      status: "PUBLISHED",
+      tags: [{ tag: { name: "Next.js" } }],
+    });
+    const detail = await getProjectBySlug("leon-portfolio");
+    expect(detail?.title).toBe("leon-portfolio");
+    expect(detail?.content).toBe("## Contenu");
+    expect(detail?.tags).toEqual(["Next.js"]);
+    expect(detail?.demoUrl).toBeUndefined();
+  });
+
+  it("retourne null si le projet est en DRAFT", async () => {
+    projectFindUnique.mockResolvedValue({
+      slug: "demo",
+      title: "Demo",
+      summary: "s",
+      content: null,
+      repoUrl: null,
+      demoUrl: null,
+      status: "DRAFT",
+      tags: [],
+    });
+    expect(await getProjectBySlug("demo")).toBeNull();
+  });
+
+  it("retourne null si le slug est inconnu", async () => {
+    projectFindUnique.mockResolvedValue(null);
+    expect(await getProjectBySlug("inconnu")).toBeNull();
+  });
+
+  it("fallback mock si la DB échoue (slug connu) sinon null", async () => {
+    projectFindUnique.mockRejectedValue(new Error("DB down"));
+    const known = await getProjectBySlug(FEATURED_PROJECTS[0]!.slug);
+    expect(known?.slug).toBe(FEATURED_PROJECTS[0]!.slug);
+    expect(await getProjectBySlug("slug-absent-du-mock")).toBeNull();
   });
 });

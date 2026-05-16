@@ -115,3 +115,59 @@ export async function getFeaturedProjects(take = 3): Promise<ProjectCard[]> {
     return [...FEATURED_PROJECTS].slice(0, take);
   }
 }
+
+export type ProjectDetail = {
+  slug: string;
+  title: string;
+  summary: string;
+  content?: string;
+  repoUrl?: string;
+  demoUrl?: string;
+  tags: string[];
+  imageGradient: string;
+};
+
+type ProjectRowDetail = ProjectWithTags & {
+  status: ProjectStatus;
+  content: string | null;
+};
+
+function mapProjectToDetail(row: ProjectRowDetail): ProjectDetail {
+  return {
+    slug: row.slug,
+    title: row.title,
+    summary: row.summary,
+    content: row.content ?? undefined,
+    repoUrl: row.repoUrl ?? undefined,
+    demoUrl: row.demoUrl ?? undefined,
+    tags: row.tags.map((pt) => pt.tag.name),
+    imageGradient: gradientFromSlug(row.slug),
+  };
+}
+
+// Retourne null si le projet n'existe pas OU n'est pas publié (→ 404 propre).
+export async function getProjectBySlug(slug: string): Promise<ProjectDetail | null> {
+  try {
+    const prisma = await loadPrisma();
+    const row = await prisma.project.findUnique({
+      where: { slug },
+      include: tagsInclude,
+    });
+    if (!row || row.status !== ProjectStatus.PUBLISHED) return null;
+    return mapProjectToDetail(row);
+  } catch (error) {
+    console.error("[projects] getProjectBySlug a échoué, fallback mock:", error);
+    const mock = FEATURED_PROJECTS.find((project) => project.slug === slug);
+    if (!mock) return null;
+    return {
+      slug: mock.slug,
+      title: mock.title,
+      summary: mock.summary,
+      content: undefined,
+      repoUrl: mock.repoUrl,
+      demoUrl: mock.demoUrl,
+      tags: [...mock.tags],
+      imageGradient: mock.imageGradient,
+    };
+  }
+}
