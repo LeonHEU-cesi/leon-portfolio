@@ -809,3 +809,19 @@ Tests validés :
 - `npm run build` → exit 0 (validé par code retour)
 
 ---
+
+### Issue #95 — [4.6] Rate limit login (5 / 15 min)
+
+Protection anti-bruteforce sur la connexion.
+
+- `lib/rate-limit.ts` (pur, `now` injectable) : limiteur fenêtre fixe en mémoire (par instance serveur — suffisant V1 self-host, documenté), `rateLimit(key, limit, windowMs)` → `{ allowed, remaining, retryAfterMs }`, `_resetRateLimitStore` (tests)
+- `app/login/actions.ts` : clé `login:<ip>:<email>` (IP via `x-forwarded-for`), **5 / 15 min** ; dépassement → message **générique** "Trop de tentatives. Réessayez plus tard." (pas d'énumération)
+
+Couvre US-TR-03.
+
+Tests validés :
+- `npm run test:run` → **104 tests passants** (101 + rate-limit 3 : seuil, reset fenêtre, isolation des clés)
+- `npm run lint` / `npm run typecheck` → exit 0
+- `npm run build` → exit 0
+
+---
