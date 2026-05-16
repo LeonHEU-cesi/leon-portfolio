@@ -1195,3 +1195,16 @@ Tests validés :
 - `npm run lint` / `npm run typecheck` / `npm run build` → exit 0 (headers appliqués, site non bloqué)
 
 ---
+
+### Issue #155 — [6.2] Validation magic-bytes upload
+
+- `lib/upload.ts` : `sniffImageType(bytes)` (signatures JPEG/PNG/WebP) + `verifyMagicBytes(declaredType, bytes)` (purs)
+- `app/api/admin/upload/route.ts` : vérifie les 12 premiers octets vs type déclaré **avant** sharp → 400 si incohérent (défense au-delà du MIME annoncé)
+
+Couvre US-AD-06.
+
+Tests validés :
+- `npm run test:run` → **137 tests passants** (132 + upload-magic 5)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
