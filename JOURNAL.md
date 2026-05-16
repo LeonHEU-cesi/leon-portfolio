@@ -1292,3 +1292,17 @@ Tests validés :
 - **CI** : suite E2E + axe bloquante verte (preuve sur la PR)
 
 ---
+
+### Issue #162 — [6.9] Audit lecteur d'écran NVDA/VoiceOver — checklist
+
+Audit manuel (non automatisable) — livrable : checklist à dérouler par Léon, complète l'audit axe automatisé (#6.8).
+
+- `Docs/claude/leon-portfolio/a11y-screenreader.md` : méthode NVDA + checklist par page publique + points transverses + procédure de consignation
+- ⚠ Déroulé device/SR = étape Léon (comme #5.11/#6.12)
+
+Couvre TS-A11Y-03.
+
+Tests validés :
+- Doc cohérente avec les composants livrés (landmarks, aria, aria-live, role=img)
+
+---
