@@ -1088,3 +1088,12 @@ Tests validés :
 - `mobile` : typecheck / lint exit 0 ; `npm test` 6/6 (comportement RefreshControl couvert par la recette #5.12)
 
 ---
+
+### Issue #131 — [5.7] Écran (tabs)/about
+
+- `app/(tabs)/about.tsx` : bio courte (cohérente avec le web `/about`), `ScrollView`
+
+Tests validés :
+- `mobile` : typecheck / lint exit 0
+
+---
