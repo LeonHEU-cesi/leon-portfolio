@@ -842,3 +842,17 @@ Tests validés :
 - `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
 
 ---
+
+### Issue #97 — [4.8] /admin/projects liste + recherche + filtres
+
+- `lib/admin-projects.ts` : `listAdminProjects({q,status})` (tous statuts, recherche `title`/`slug` insensitive, filtre statut, Prisma lazy + fallback [])
+- `components/admin/AdminProjectsTable.tsx` (pur) : form GET recherche/statut, table, liens éditer + nouveau, état vide accessible
+- `app/admin/projects/page.tsx` : `searchParams` (Promise), `force-dynamic`, `robots noindex`
+
+Couvre US-AD-04 (liste).
+
+Tests validés :
+- `npm run test:run` → **109 tests passants** (105 + admin-projects 2 + AdminProjectsTable 2 ; fallback boilerplate non re-testé — déjà couvert ailleurs, mock de rejet fragile vitest)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
