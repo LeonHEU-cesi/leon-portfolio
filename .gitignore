@@ -60,8 +60,8 @@ playwright/.cache/
 # Storybook
 storybook-static/
 
-# Prisma
-web/prisma/migrations/dev/
+# Prisma — les migrations sont versionnées (requis par `prisma migrate deploy`
+# en CI et en prod). Ne rien ignorer sous web/prisma/migrations/.
 
 # Uploads dev
 web/public/uploads/
