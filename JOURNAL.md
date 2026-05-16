@@ -499,3 +499,19 @@ Tests validés :
 - **CI `web-e2e-lighthouse`** : `Playwright E2E` vert et bloquant (preuve empirique sur la PR)
 
 ---
+
+### Issue #52 — [2.11] Sprint 2 review + release v0.3.0
+
+Clôture du Sprint 2 : revue, release develop→main, tag `v0.3.0`.
+
+- `Docs/claude/Sprint docs/sprint2-projets.md` : issues + PRs, stack/versions, décisions (CI réparée, baseline Prisma, résilience build, tests 3 niveaux), dette, métriques (65 TU / 6 TF / 2 E2E), DoD §5 cochée, préparation Sprint 3
+- PR `release: Sprint 2 - Projets` develop→main (merge commit, historique préservé)
+- Tag `v0.3.0` + `gh release` ; milestone `M2 - Projets` fermée
+- Mémoire projet mise à jour (correction : la CI n'avait jamais compilé avant le Sprint 2)
+
+Tests validés :
+- Récap conforme au format Sprint 1, versions cohérentes
+- Toutes les issues Sprint 2 closed sur le Board, M2 fermée
+- CI verte sur `develop` (3 jobs) avant release
+
+---
