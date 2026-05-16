@@ -1132,3 +1132,21 @@ Tests validés :
 - `mobile` : typecheck / lint exit 0 ; `eas.json`/`app.json` JSON valides (config uniquement, pas de build cloud ici)
 
 ---
+
+### Issue #135 — [5.11] Build APK preview + test device
+
+⚠ **Étape manuelle Léon** (credentials EAS) — non automatisable, comme `docker/migrate` au Sprint 2. Config livrée (#134). Issue **laissée ouverte** (dépendance externe), procédure documentée en commentaire d'issue + recette #5.12. Le Sprint 5 est clôturé avec cette issue explicitement en attente.
+
+---
+
+### Issue #136 — [5.12] Recette manuelle TM + proxies automatisés
+
+- `Docs/claude/leon-portfolio/mobile-recette.md` : checklist **TM-01..08** (device, à dérouler par Léon après l'APK #5.11)
+- Proxies automatisés (jest-expo, sans device) : `lib/api`, `lib/share`, `lib/contact` + **smoke render** des écrans statiques About/Contact
+
+Couvre Cahier de tests TM-*.
+
+Tests validés :
+- `mobile` : typecheck / lint exit 0 ; `npm test` → **10/10** (4 suites : lib-api 5, share 1, contact 2, screens 2)
+
+---
