@@ -2,10 +2,13 @@ import NextAuth from "next-auth";
 
 import { authConfig } from "@/auth.config";
 
-// Middleware Edge : utilise UNIQUEMENT authConfig (aucun Prisma/bcrypt).
-// Le callback `authorized` bloque /admin/* sans session → Auth.js
-// redirige vers `pages.signIn` (/login) avec callbackUrl automatique.
-export const { auth: middleware } = NextAuth(authConfig);
+// Middleware Edge : authConfig uniquement (aucun Prisma/bcrypt).
+// Export par défaut direct (Next n'accepte pas un export déstructuré
+// pour le middleware). Le callback `authorized` bloque /admin/* sans
+// session → redirection /login + callbackUrl automatique.
+const { auth } = NextAuth(authConfig);
+
+export default auth;
 
 export const config = {
   matcher: ["/admin/:path*"],

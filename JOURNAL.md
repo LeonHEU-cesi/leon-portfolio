@@ -779,7 +779,8 @@ Tests validés :
 
 Protection des routes admin via le middleware Auth.js (pattern split Edge-safe).
 
-- `middleware.ts` : `NextAuth(authConfig)` (authConfig sans Prisma/bcrypt → Edge-safe), `matcher: ["/admin/:path*"]`
+- `middleware.ts` : `const { auth } = NextAuth(authConfig); export default auth;` (authConfig sans Prisma/bcrypt → Edge-safe), `matcher: ["/admin/:path*"]`
+- ⚠ Contrainte Next 16 : le middleware doit être un **export direct** (default ou `export const middleware`), **pas un export déstructuré** (`export const { auth: middleware }` → "must export a function"). 1re tentative rouge en CI (build), corrigée sur la même branche ; build désormais validé par **code retour** (pas par grep)
 - Le callback `authorized` (#92) renvoie `false` pour `/admin/*` sans session → Auth.js redirige vers `/login` avec `callbackUrl` automatique
 - Logique de garde déjà couverte par `auth-config.test.ts` (#92) ; parcours E2E prévu #4.15
 
@@ -787,7 +788,7 @@ Couvre US-AD-01 (protection).
 
 Tests validés :
 - `npm run test:run` → 99 tests passants (inchangé — garde testée via authConfig)
-- `npm run lint` / `npm run typecheck` → 0
-- `npm run build` → succès (middleware Edge compilé)
+- `npm run lint` / `npm run typecheck` → exit 0
+- `npm run build` → exit 0, middleware reconnu (`ƒ Proxy (Middleware)`)
 
 ---
