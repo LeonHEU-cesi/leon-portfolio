@@ -721,3 +721,20 @@ Tests validés :
 - CI verte sur `develop` avant release
 
 ---
+
+## Sprint 4 — Admin
+
+### Issue #90 — [4.1] Schéma admin — vérification (aucune nouvelle migration)
+
+Le schéma `User`/`Article`/`ArticleTag` (+ `Project`/`Tag`/`ProjectTag`) existe depuis le Sprint 0 (#14) et la baseline `20260516000000_init` (#42) le couvre. Vérification de parité avant le CRUD admin.
+
+- `git log -- web/prisma/schema.prisma` : un seul commit (#14) → schéma inchangé depuis le Sprint 0
+- Comparaison normalisée `prisma migrate diff --from-empty --to-schema-datamodel` vs migration committée : **73 lignes identiques** → parité stricte, aucune nouvelle migration requise
+- `prisma validate` → schéma valide
+- Champs suffisants pour l'admin : `User.role`, timestamps, relations `ProjectTag`/`ArticleTag`, enums statut
+
+Tests validés :
+- Parité schéma ↔ baseline migration prouvée (diff normalisé vide)
+- CI verte (branch protection désormais active sur develop/main)
+
+---
