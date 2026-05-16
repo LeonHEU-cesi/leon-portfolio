@@ -1,29 +1,36 @@
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { usePrefersReducedMotion } from "@/lib/hooks/usePrefersReducedMotion";
 
-type Listener = (event: MediaQueryListEvent) => void;
+type Listener = () => void;
 
+// Mock adapté à useSyncExternalStore : matchMedia est appelé plusieurs
+// fois (subscribe + getSnapshot), `matches` est un état partagé mutable.
 function createMatchMediaMock(initialMatches: boolean) {
   const listeners = new Set<Listener>();
+  const state = { matches: initialMatches };
+  const removeEventListener = vi.fn(
+    (_e: string, l: Listener) => listeners.delete(l),
+  );
   const matchMedia = vi.fn((query: string) => ({
-    matches: initialMatches,
+    get matches() {
+      return state.matches;
+    },
     media: query,
     onchange: null,
-    addEventListener: vi.fn((_event: string, listener: Listener) => listeners.add(listener)),
-    removeEventListener: vi.fn((_event: string, listener: Listener) => listeners.delete(listener)),
+    addEventListener: (_e: string, l: Listener) => listeners.add(l),
+    removeEventListener,
     addListener: vi.fn(),
     removeListener: vi.fn(),
     dispatchEvent: vi.fn(),
   }));
-
   return {
     matchMedia,
+    removeEventListener,
     triggerChange(matches: boolean) {
-      listeners.forEach((listener) =>
-        listener({ matches, media: "(prefers-reduced-motion: reduce)" } as MediaQueryListEvent),
-      );
+      state.matches = matches;
+      listeners.forEach((l) => l());
     },
   };
 }
@@ -31,56 +38,41 @@ function createMatchMediaMock(initialMatches: boolean) {
 describe("usePrefersReducedMotion", () => {
   let mock: ReturnType<typeof createMatchMediaMock>;
 
-  beforeEach(() => {
-    mock = createMatchMediaMock(false);
+  function install(initial: boolean) {
+    mock = createMatchMediaMock(initial);
     Object.defineProperty(window, "matchMedia", {
       writable: true,
       configurable: true,
       value: mock.matchMedia,
     });
-  });
+  }
 
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
+  beforeEach(() => install(false));
+  afterEach(() => vi.clearAllMocks());
 
-  it("retourne false par défaut quand l'OS n'a pas la préférence reduce", () => {
+  it("retourne false par défaut", () => {
     const { result } = renderHook(() => usePrefersReducedMotion());
     expect(result.current).toBe(false);
   });
 
   it("retourne true quand matchMedia reporte matches: true", () => {
-    mock = createMatchMediaMock(true);
-    Object.defineProperty(window, "matchMedia", {
-      writable: true,
-      configurable: true,
-      value: mock.matchMedia,
-    });
+    install(true);
     const { result } = renderHook(() => usePrefersReducedMotion());
     expect(result.current).toBe(true);
   });
 
-  it("met à jour la valeur quand la préférence OS change en runtime", () => {
+  it("met à jour la valeur quand la préférence OS change", () => {
     const { result } = renderHook(() => usePrefersReducedMotion());
     expect(result.current).toBe(false);
-
-    act(() => {
-      mock.triggerChange(true);
-    });
+    act(() => mock.triggerChange(true));
     expect(result.current).toBe(true);
-
-    act(() => {
-      mock.triggerChange(false);
-    });
+    act(() => mock.triggerChange(false));
     expect(result.current).toBe(false);
   });
 
-  it("appelle removeEventListener au démontage du composant (cleanup)", () => {
+  it("retire le listener au démontage (cleanup)", () => {
     const { unmount } = renderHook(() => usePrefersReducedMotion());
-    const mediaQueryInstance = mock.matchMedia.mock.results[0]?.value as
-      | { removeEventListener: { mock: { calls: unknown[][] } } }
-      | undefined;
     unmount();
-    expect(mediaQueryInstance?.removeEventListener.mock.calls.length).toBeGreaterThan(0);
+    expect(mock.removeEventListener.mock.calls.length).toBeGreaterThan(0);
   });
 });

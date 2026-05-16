@@ -29,6 +29,14 @@ export function MobileMenu() {
 
   const close = useCallback(() => setIsOpen(false), []);
 
+  // Ferme quand la route change : ajustement d'état pendant le rendu
+  // (pattern React officiel, pas d'effet → pas de setState-in-effect).
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setIsOpen(false);
+  }
+
   // Esc ferme le menu
   useEffect(() => {
     if (!isOpen) return;
@@ -58,12 +66,6 @@ export function MobileMenu() {
       triggerRef.current?.focus();
     }
   }, [isOpen]);
-
-  // Ferme automatiquement quand la route change (back/forward navigation OS).
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    close();
-  }, [pathname, close]);
 
   const drawerAnimation = prefersReduced
     ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }

@@ -1363,3 +1363,17 @@ Tests validés :
 - `mobile` : 0 référence résiduelle ; `typecheck`/`lint` exit 0 ; `npm test` **10/10**
 
 ---
+
+### Issue #168 — [6.15] Refactor des 3 eslint-disable react-hooks
+
+Dette soldée — suppression des 3 `eslint-disable react-hooks/set-state-in-effect` via patterns propres :
+
+- `lib/hooks/usePrefersReducedMotion.ts` → `useSyncExternalStore` (subscribe matchMedia, getSnapshot défensif, getServerSnapshot=false) — plus d'effet/setState
+- `lib/hooks/useHydrated.ts` (nouveau) → `useSyncExternalStore` (false serveur, true après hydratation) ; `ThemeToggle.tsx` consomme `useHydrated` (remplace le `mounted` state+effet)
+- `MobileMenu.tsx` → fermeture sur changement de route via **ajustement d'état pendant le rendu** (pattern React officiel) au lieu d'un effet
+- Test `usePrefersReducedMotion` réécrit pour le contrat `useSyncExternalStore` (mock `matches` partagé mutable)
+
+Tests validés :
+- `grep eslint-disable.*react-hooks` → **0** ; `npm run test:run` **139** ; `lint`/`typecheck`/`build` exit 0
+
+---
