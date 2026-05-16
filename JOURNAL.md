@@ -1277,3 +1277,18 @@ Tests validés :
 - **CI** : suite E2E bloquante verte (preuve sur la PR)
 
 ---
+
+### Issue #161 — [6.8] Audit a11y axe + corrections contraste
+
+- Dép `@axe-core/playwright` ; `tests/e2e/a11y.e2e.spec.ts` : axe (wcag2a/2aa) sur /, /projets, /cv, /about, /contact → **0 violation serious/critical**, bloquant
+- `page.emulateMedia({ reducedMotion: 'reduce' })` : supprime les faux positifs des éléments animés (`opacity:0` whileInView lu avant entrée)
+- **Corrections contraste réelles** (`globals.css`) : `--secondary`/`--muted-fg` assombris en light / éclaircis en dark (4 palettes) ; `--accent` editorial-light et `--primary`/`--accent` tech-light assombris pour AA 4.5:1 sur surfaces claires
+- Audit manuel lecteur d'écran → #6.9
+
+Couvre TS-A11Y-*.
+
+Tests validés :
+- Local : `lint`/`typecheck`/`build` exit 0 ; `npm run test:run` **138** ; `npm run test:e2e` **16/16** (axe 5 inclus)
+- **CI** : suite E2E + axe bloquante verte (preuve sur la PR)
+
+---
