@@ -1,4 +1,5 @@
-import { ActivityIndicator, FlatList, StyleSheet } from 'react-native';
+import { Link } from 'expo-router';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -37,13 +38,17 @@ export default function ProjectsScreen() {
         contentContainerStyle={styles.list}
         ListEmptyComponent={<ThemedText>Aucun projet pour le moment.</ThemedText>}
         renderItem={({ item }) => (
-          <ThemedView style={styles.card}>
-            <ThemedText type="subtitle">{item.title}</ThemedText>
-            <ThemedText>{item.summary}</ThemedText>
-            {item.tags.length > 0 && (
-              <ThemedText style={styles.tags}>{item.tags.join(' · ')}</ThemedText>
-            )}
-          </ThemedView>
+          <Link href={`/projects/${item.slug}`} asChild>
+            <Pressable accessibilityRole="button">
+              <ThemedView style={styles.card}>
+                <ThemedText type="subtitle">{item.title}</ThemedText>
+                <ThemedText>{item.summary}</ThemedText>
+                {item.tags.length > 0 && (
+                  <ThemedText style={styles.tags}>{item.tags.join(' · ')}</ThemedText>
+                )}
+              </ThemedView>
+            </Pressable>
+          </Link>
         )}
       />
     </ThemedView>
