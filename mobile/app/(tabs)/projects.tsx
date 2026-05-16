@@ -7,12 +7,16 @@ import {
   StyleSheet,
 } from 'react-native';
 
+import Animated, { FadeInDown } from 'react-native-reanimated';
+
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useProjects } from '@/hooks/use-projects';
+import { useReduceMotion } from '@/hooks/use-reduce-motion';
 
 export default function ProjectsScreen() {
   const { data, isLoading, isError, refetch, isRefetching } = useProjects();
+  const reduceMotion = useReduceMotion();
 
   if (isLoading) {
     return (
@@ -46,18 +50,25 @@ export default function ProjectsScreen() {
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
         ListEmptyComponent={<ThemedText>Aucun projet pour le moment.</ThemedText>}
-        renderItem={({ item }) => (
-          <Link href={`/projects/${item.slug}`} asChild>
-            <Pressable accessibilityRole="button">
-              <ThemedView style={styles.card}>
-                <ThemedText type="subtitle">{item.title}</ThemedText>
-                <ThemedText>{item.summary}</ThemedText>
-                {item.tags.length > 0 && (
-                  <ThemedText style={styles.tags}>{item.tags.join(' · ')}</ThemedText>
-                )}
-              </ThemedView>
-            </Pressable>
-          </Link>
+        renderItem={({ item, index }) => (
+          <Animated.View
+            entering={
+              reduceMotion ? undefined : FadeInDown.delay(index * 50).duration(250)
+            }>
+            <Link href={`/projects/${item.slug}`} asChild>
+              <Pressable accessibilityRole="button">
+                <ThemedView style={styles.card}>
+                  <ThemedText type="subtitle">{item.title}</ThemedText>
+                  <ThemedText>{item.summary}</ThemedText>
+                  {item.tags.length > 0 && (
+                    <ThemedText style={styles.tags}>
+                      {item.tags.join(' · ')}
+                    </ThemedText>
+                  )}
+                </ThemedView>
+              </Pressable>
+            </Link>
+          </Animated.View>
         )}
       />
     </ThemedView>

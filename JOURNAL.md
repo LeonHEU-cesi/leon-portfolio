@@ -1109,3 +1109,13 @@ Tests validés :
 - `mobile` : typecheck / lint exit 0 ; `npm test` → **8/8** (+ contact 2)
 
 ---
+
+### Issue #133 — [5.9] Animations transitions Reanimated
+
+- `hooks/use-reduce-motion.ts` : suit `AccessibilityInfo` (reduceMotion + listener)
+- `app/(tabs)/projects.tsx` : cartes en `Animated.View` `FadeInDown` échelonné (`delay index*50`), **désactivé si reduce motion**
+
+Tests validés :
+- `mobile` : typecheck / lint exit 0 ; `npm test` 8/8 (anim/a11y vérifiées en recette #5.12)
+
+---
