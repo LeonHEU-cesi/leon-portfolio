@@ -21,6 +21,7 @@
     "test:run": "vitest run --project unit",
     "test:coverage": "vitest run --project unit --coverage",
     "test:run:all": "vitest run",
+    "test:tf": "vitest run --project tf",
     "test:storybook": "vitest run --project storybook"
   },
   "dependencies": {

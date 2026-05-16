@@ -30,7 +30,24 @@ export default defineConfig({
           exclude: ["node_modules", ".next", "storybook-static"],
         },
       },
-      // Project 2 — stories Storybook exécutées comme tests browser via Playwright
+      // Project 2 — tests fonctionnels (TF) en Node sur une vraie base
+      // Postgres (CI: service postgres + prisma migrate deploy).
+      {
+        extends: true,
+        resolve: {
+          alias: {
+            "@": path.resolve(dirname, "."),
+          },
+        },
+        test: {
+          name: "tf",
+          environment: "node",
+          globals: true,
+          include: ["tests/tf/**/*.tf.test.ts"],
+          exclude: ["node_modules", ".next", "storybook-static"],
+        },
+      },
+      // Project 3 — stories Storybook exécutées comme tests browser via Playwright
       {
         extends: true,
         plugins: [
