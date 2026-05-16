@@ -1119,3 +1119,16 @@ Tests validés :
 - `mobile` : typecheck / lint exit 0 ; `npm test` 8/8 (anim/a11y vérifiées en recette #5.12)
 
 ---
+
+### Issue #134 — [5.10] Configuration EAS Build (profil preview)
+
+- `mobile/eas.json` : profils `development` / **`preview`** (`distribution: internal`, `android.buildType: apk`) / `production` (`autoIncrement`)
+- `mobile/app.json` : `name` "Léon HEU — Portfolio", `slug` `leon-portfolio`, `android.package` + `ios.bundleIdentifier` `fr.leonheu.portfolio`
+- Build cloud APK = étape Léon (#5.11, credentials EAS) : `cd mobile && npx eas login && npx eas build -p android --profile preview`
+
+Couvre US-MOB-01 (config).
+
+Tests validés :
+- `mobile` : typecheck / lint exit 0 ; `eas.json`/`app.json` JSON valides (config uniquement, pas de build cloud ici)
+
+---
