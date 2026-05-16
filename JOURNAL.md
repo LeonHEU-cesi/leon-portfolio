@@ -792,3 +792,20 @@ Tests validés :
 - `npm run build` → exit 0, middleware reconnu (`ƒ Proxy (Middleware)`)
 
 ---
+
+### Issue #94 — [4.5] Page /login + Server Action
+
+Page de connexion admin avec Server Action Auth.js, message d'erreur générique.
+
+- `app/login/actions.ts` (`"use server"`) : `authenticate(prev, formData)` → `signIn("credentials", { redirectTo })` ; `AuthError` → `{ error: "Identifiants invalides." }` (aucune énumération) ; redirections (succès) relancées ; `callbackUrl` validé (préfixe `/`)
+- `components/auth/LoginForm.tsx` (client) : `useActionState`, champs labellisés + `autoComplete`, `role="alert"` erreur, état `pending`, `callbackUrl` en input caché — action **injectée** (testable)
+- `app/login/page.tsx` : metadata `robots: noindex`, `searchParams.callbackUrl` (Promise Next 16), mode editorial
+
+Couvre US-AD-01 (login).
+
+Tests validés :
+- `npm run test:run` → **101 tests passants** (99 + LoginForm 2 : champs/callbackUrl + affichage erreur via action)
+- `npm run lint` / `npm run typecheck` → exit 0
+- `npm run build` → exit 0 (validé par code retour)
+
+---
