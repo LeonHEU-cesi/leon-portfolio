@@ -1208,3 +1208,18 @@ Tests validés :
 - `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
 
 ---
+
+### Issue #156 — [6.3] Audit XSS rendu contenu
+
+Audit : le `content` projet/article est rendu en **texte échappé** par React (`whitespace-pre-line`), aucun `dangerouslySetInnerHTML` sur de l'input utilisateur (seul usage = QR SVG `ContactQrCode` depuis la lib `qrcode`, données = constantes → sûr).
+
+- `tests/unit/xss-content.test.tsx` : un `content` avec `<script>`/`<img onerror>` → aucun élément injecté, texte rendu échappé, pas d'exécution
+- Note V2 : sanitiser (DOMPurify/rehype) si rendu MDX un jour
+
+Couvre TS-INPUT-02.
+
+Tests validés :
+- `npm run test:run` → **138 tests passants** (137 + xss-content 1)
+- `npm run lint` / `npm run typecheck` → exit 0
+
+---
