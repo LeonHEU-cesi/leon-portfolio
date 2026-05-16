@@ -1164,3 +1164,18 @@ Tests validés :
 - **CI `mobile-checks`** réel et vert et bloquant (preuve empirique sur la PR)
 
 ---
+
+### Issue #138 — [5.14] Sprint 5 review + release v0.6.0
+
+Clôture du Sprint 5 (timeboxée — #5.11 build APK en attente externe EAS).
+
+- `Docs/claude/Sprint docs/sprint5-mobile.md` : 13/14 issues codables + PRs, stack mobile (Expo 54, expo-router, TanStack Query, jest-expo), décisions (réconciliation API, scaffold, CI durcie), dette, métriques (web 130 TU / mobile 10 jest), DoD §8 (hors #5.11), prépa Sprint 6
+- PR `release: Sprint 5 - Mobile` develop→main (merge commit), tag `v0.6.0`, M5 fermée (timebox ; #135 reste ouverte, documentée), `gh release`
+- Mémoire mise à jour ; statut explicite du build APK
+
+Tests validés :
+- Récap conforme au format Sprint 4, versions cohérentes
+- Toutes les issues codables Sprint 5 closed ; #135 explicitement en attente externe
+- CI verte sur `develop` avant release
+
+---
