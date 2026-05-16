@@ -1179,3 +1179,19 @@ Tests validés :
 - CI verte sur `develop` avant release
 
 ---
+
+## Sprint 6 — Hardening
+
+### Issue #154 — [6.1] Headers sécurité (CSP, HSTS, X-Frame-Options)
+
+- `lib/security-headers.ts` (pur) : `buildCsp()` (default/script/style/img/font/connect/frame-ancestors/base-uri/form-action/object-src) + `securityHeaders` (CSP, HSTS `max-age 63072000; includeSubDomains; preload`, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy)
+- `next.config.ts` : `headers()` applique à `/:path*` (import **relatif** — `@/` ne résout pas dans la config Next)
+- CSP V1 sans nonce (`'unsafe-inline'` style/script toléré Next/Tailwind ; durcissement nonce noté V2)
+
+Couvre US-TR-01.
+
+Tests validés :
+- `npm run test:run` → **132 tests passants** (130 + security-headers 2)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0 (headers appliqués, site non bloqué)
+
+---
