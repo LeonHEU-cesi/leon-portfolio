@@ -412,3 +412,20 @@ Tests validés :
 - `npm run build` → succès, `/projets/[slug]` rendu `ƒ` (dynamique, pas de DB au build)
 
 ---
+
+### Issue #47 — [2.6] GitHubService + cache ISR 24h
+
+Service isolé d'accès aux repos publics GitHub de `LeonHEU-cesi`, caché 24h, qui ne casse jamais la page (dégradation propre).
+
+- `lib/services/github.ts` : `fetchPublicRepos(fetchImpl = fetch)` — `fetch` injectable pour les tests ; `Authorization: Bearer` si `GITHUB_TOKEN` présent, `Accept` + `User-Agent` ; exclut forks/archivés, tri par stars desc ; **renvoie `[]`** sur erreur réseau / quota / 4xx-5xx / token absent (jamais d'exception)
+- `getCachedPublicRepos` = `unstable_cache(..., { revalidate: 86400, tags: ["github-repos"] })` → 1 appel réseau / jour max
+- Type `GitHubRepo` exporté (consommé par #2.7)
+
+Couvre US-PJ-04 (partie service).
+
+Tests validés :
+- `npm run test:run` → **61 tests passants** (57 + github-service 4 : mapping/tri/exclusion forks, en-tête token, non-OK→[], exception→[])
+- `npm run lint` / `npm run typecheck` → 0
+- Build vérifié en CI (module non encore monté sur une route)
+
+---
