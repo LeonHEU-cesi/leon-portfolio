@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { ContactQrCode } from "@/components/sections/ContactQrCode";
 import { ContactView } from "@/components/sections/ContactView";
 import { CopyEmailButton } from "@/components/ui/CopyEmailButton";
 import { CONTACT_EMAIL, SOCIALS } from "@/lib/data/socials";
@@ -36,6 +37,8 @@ export default function ContactPage() {
           socials={SOCIALS}
           action={<CopyEmailButton email={CONTACT_EMAIL} />}
         />
+
+        <ContactQrCode />
       </div>
     </section>
   );
