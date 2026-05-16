@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { GitHubRepos } from "@/components/sections/GitHubRepos";
-import { ProjectsListView } from "@/components/sections/ProjectsList";
+import { ProjectsSearch } from "@/components/sections/ProjectsSearch";
 import { TagFilter } from "@/components/sections/TagFilter";
 import { getAllTags, getPublishedProjects } from "@/lib/projects";
 import { parseSelectedTags } from "@/lib/tag-filter";
@@ -57,7 +57,7 @@ export default async function ProjetsPage({
           {selected.length > 0 ? " filtré" + (projects.length > 1 ? "s" : "") : ""}
         </p>
 
-        <ProjectsListView projects={projects} />
+        <ProjectsSearch projects={projects} />
 
         <GitHubRepos />
       </div>
