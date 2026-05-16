@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { CvPrintHeader } from "@/components/sections/CvPrintHeader";
 import { CvSectionsView } from "@/components/sections/CvSections";
 import { CvTimelineView } from "@/components/sections/CvTimeline";
 import { PrintButton } from "@/components/ui/PrintButton";
@@ -24,6 +25,7 @@ export default function CvPage() {
       aria-labelledby="cv-title"
     >
       <div className="mx-auto max-w-3xl">
+        <CvPrintHeader />
         <header className="mb-16">
           <p className="text-xs uppercase tracking-[0.2em] text-[var(--secondary)]">
             Parcours
