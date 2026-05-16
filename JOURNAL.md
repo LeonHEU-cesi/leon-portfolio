@@ -1236,3 +1236,17 @@ Tests validés :
 - **CI** : suite E2E bloquante verte (preuve sur la PR)
 
 ---
+
+### Issue #158 — [6.5] Lighthouse CI config + budgets
+
+- Dép `@lhci/cli@^0.15`, script `lhci` (`lhci autorun`)
+- `web/lighthouserc.cjs` : collecte sur `npm run start` (5 URLs publiques), assertions **a11y/best-practices/seo ≥ 0.9 (error)**, **performance ≥ 0.8 (warn — runner CI variable)**, upload temporary-public-storage
+- `ci.yml` : step `npm run lhci` (sans `--if-present`), `continue-on-error` conservé (budgets informatifs ; le gate a11y dur = audit axe #6.8)
+
+Couvre TP-*.
+
+Tests validés :
+- `python yaml.safe_load(ci.yml)` valide ; `lint`/`typecheck`/`build` exit 0 ; 138 TU
+- **CI** : step Lighthouse exécuté (rapport généré, non bloquant)
+
+---
