@@ -108,8 +108,10 @@ jobs:
       - name: Playwright E2E
         run: npm run test:e2e
 
+      # Lighthouse CI : budgets informatifs (perf runner CI variable).
+      # Le gate a11y dur est l'audit axe E2E (#6.8).
       - name: Lighthouse CI
-        run: npm run lhci --if-present
+        run: npm run lhci
         continue-on-error: true
 
   mobile-checks:
