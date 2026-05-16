@@ -1,0 +1,20 @@
+# Caddyfile staging — reverse proxy + TLS auto Let's Encrypt.
+# Déposé sur la VM, monté dans le conteneur caddy (compose staging).
+
+{
+  email leon@leonheu.fr
+}
+
+staging.leonheu.fr {
+  encode zstd gzip
+  reverse_proxy web:3000
+
+  header {
+    # Défense en profondeur (les headers applicatifs #6.1 restent la source).
+    -Server
+  }
+
+  log {
+    output stdout
+  }
+}

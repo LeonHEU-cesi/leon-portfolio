@@ -1,0 +1,47 @@
+name: Deploy Staging
+
+# Déploiement staging sur push develop. Gardé : no-op propre si les
+# secrets ne sont pas configurés (la VM/credentials = côté Léon, #6.12).
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy staging (Proxmox)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Vérifier la configuration de déploiement
+        id: gate
+        env:
+          STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+        run: |
+          if [ -z "$STAGING_SSH_HOST" ]; then
+            echo "Secrets de déploiement absents — staging non configuré."
+            echo "Voir Docs/claude/leon-portfolio/deploiement-staging.md"
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Déploiement SSH (compose up --build)
+        if: steps.gate.outputs.configured == 'true'
+        env:
+          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" \
+            'cd /opt/leon-portfolio && git pull --ff-only origin develop && docker compose -f infra/docker-compose.staging.yml up -d --build && docker compose -f infra/docker-compose.staging.yml exec -T web npx prisma migrate deploy'
