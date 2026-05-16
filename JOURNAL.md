@@ -1077,3 +1077,14 @@ Tests validés :
 - `mobile` : `npm run typecheck` / `npm run lint` exit 0 ; `npm test` → **6/6** (lib-api 5 + share 1)
 
 ---
+
+### Issue #130 — [5.6] Pull-to-refresh catalogue
+
+- `app/(tabs)/projects.tsx` : `RefreshControl` (refreshing=`isRefetching`, onRefresh=`refetch` TanStack Query)
+
+Couvre US-MOB-05.
+
+Tests validés :
+- `mobile` : typecheck / lint exit 0 ; `npm test` 6/6 (comportement RefreshControl couvert par la recette #5.12)
+
+---
