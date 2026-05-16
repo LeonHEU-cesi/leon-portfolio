@@ -586,3 +586,21 @@ Tests validés :
 - `npm run build` → succès (`✓ Compiled`), `/cv` statique
 
 ---
+
+### Issue #69 — [3.5] Page /contact : mailto + icônes réseaux
+
+Page `/contact` (mode editorial) : email (mailto), GitHub, LinkedIn, bouton copier l'email.
+
+- `lib/data/socials.ts` : `CONTACT_EMAIL` + `SOCIALS` (Email mailto, GitHub factuel, LinkedIn handle à confirmer — donnée éditable)
+- `components/sections/ContactView.tsx` (pur) : liste des canaux, liens externes `rel="noopener noreferrer"` + `aria-label`, slot `action`
+- `components/ui/CopyEmailButton.tsx` (client) : `navigator.clipboard.writeText` + retour visuel "Email copié ✓", dégradation propre (le mailto reste)
+- `app/contact/page.tsx` : metadata, mode editorial, h1 + intro
+
+Couvre US-CT-01.
+
+Tests validés :
+- `npm run test:run` → **75 tests passants** (72 + ContactView 2 + CopyEmailButton 1 — test du comportement observable, userEvent fournit un presse-papier fonctionnel)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/contact` statique
+
+---
