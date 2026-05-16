@@ -515,3 +515,209 @@ Tests validés :
 - CI verte sur `develop` (3 jobs) avant release
 
 ---
+
+## Sprint 3 — CV / Contact / Recherche
+
+### Issue #65 — [3.1] Page /cv : timeline expériences animée au scroll
+
+Page `/cv` en mode `editorial` avec timeline verticale antéchronologique, entrées révélées au scroll (Framer `whileInView`), rendu statique immédiat si `prefers-reduced-motion`.
+
+- `lib/data/cv.ts` : type `CvEntry` + `CV_EXPERIENCES` (formation CESI CDA + projets leon-portfolio / CESIZen — données factuelles, pas d'employeur fictif), `start` pour le tri
+- `components/sections/CvTimeline.tsx` : `CvTimelineView` (client) — `<ol>` bordée, puce, période/kind, rôle, org, points ; `motion.li` `whileInView` (once) gated `usePrefersReducedMotion`
+- `app/cv/page.tsx` : metadata, mode editorial (route sans préfixe tech), h1 + intro + section timeline
+- Tri antéchronologique (`start` desc) dans la vue
+
+Couvre US-CV-01 (expériences).
+
+Tests validés :
+- `npm run test:run` → **67 tests passants** (65 + CvTimeline 2 : rendu entrées + ordre antéchronologique)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/cv` rendu statique (`○`)
+
+---
+
+### Issue #66 — [3.2] Sections Compétences + Formations + Langues + Loisirs
+
+Complète `/cv` avec 4 sections sémantiques sous la timeline.
+
+- `lib/data/cv.ts` : `CV_SKILLS` (4 groupes), `CV_FORMATIONS` (CESI CDA RNCP 6), `CV_LANGUES` (FR natif / EN B2), `CV_LOISIRS` — données factuelles
+- `components/sections/CvSections.tsx` : `CvSectionsView` (pur) — `<section aria-labelledby>` + h2/h3, compétences en chips groupées, listes formations/langues/loisirs, responsive
+- `app/cv/page.tsx` : rendu de `CvSectionsView` après la timeline
+
+Couvre US-CV-01 (sections).
+
+Tests validés :
+- `npm run test:run` → **68 tests passants** (67 + CvSections 1 : 4 sections + contenu)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/cv` statique
+
+---
+
+### Issue #67 — [3.3] CSS @media print + bouton "Télécharger le PDF"
+
+`/cv` imprimable proprement + export PDF via le navigateur, sans dépendance externe.
+
+- `app/globals.css` : bloc `@media print` (masque `header`/`footer`/`.no-print`, fond blanc, liens noirs sans soulignement) + utilitaire `.print-only` (caché écran, visible print) — dans `@layer base`
+- `components/ui/PrintButton.tsx` (client) : `window.print()`, `aria-label` explicite, classe `no-print` (s'auto-masque à l'impression)
+- `app/cv/page.tsx` : bouton intégré dans l'en-tête
+
+Couvre US-CV-02 (export).
+
+Tests validés :
+- `npm run test:run` → **70 tests passants** (68 + PrintButton 2 : a11y + classe no-print, clic → `window.print`)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/cv` statique
+
+---
+
+### Issue #68 — [3.4] Fidélité PDF imprimé (A4, sauts de page, en-tête)
+
+Affine le rendu imprimé de `/cv` (option print navigateur retenue — pas de Pandoc en CI).
+
+- `app/globals.css` (bloc `@media print`) : `@page { size: A4; margin: 1.5cm }`, `print-color-adjust: exact`, `font-size: 11pt`, `main` sans padding, `break-inside: avoid` sur `section`/`li`/`.break-avoid`, `break-after: avoid` sur les titres
+- `components/sections/CvPrintHeader.tsx` : en-tête `.print-only` (identité + email/site/GitHub) — invisible à l'écran, en tête du PDF
+- `app/cv/page.tsx` : `CvPrintHeader` en haut du document
+
+Couvre US-CV-02 (fidélité).
+
+Tests validés :
+- `npm run test:run` → **72 tests passants** (70 + CvPrintHeader 2 : contenu + conteneur `.print-only` + props)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès (`✓ Compiled`), `/cv` statique
+
+---
+
+### Issue #69 — [3.5] Page /contact : mailto + icônes réseaux
+
+Page `/contact` (mode editorial) : email (mailto), GitHub, LinkedIn, bouton copier l'email.
+
+- `lib/data/socials.ts` : `CONTACT_EMAIL` + `SOCIALS` (Email mailto, GitHub factuel, LinkedIn handle à confirmer — donnée éditable)
+- `components/sections/ContactView.tsx` (pur) : liste des canaux, liens externes `rel="noopener noreferrer"` + `aria-label`, slot `action`
+- `components/ui/CopyEmailButton.tsx` (client) : `navigator.clipboard.writeText` + retour visuel "Email copié ✓", dégradation propre (le mailto reste)
+- `app/contact/page.tsx` : metadata, mode editorial, h1 + intro
+
+Couvre US-CT-01.
+
+Tests validés :
+- `npm run test:run` → **75 tests passants** (72 + ContactView 2 + CopyEmailButton 1 — test du comportement observable, userEvent fournit un presse-papier fonctionnel)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/contact` statique
+
+---
+
+### Issue #70 — [3.6] QR vCard SVG (optionnel)
+
+QR code (SVG) encodant une vCard sur `/contact`, + repli .vcf téléchargeable.
+
+- `lib/vcard.ts` (pur) : `buildVCard` (vCard 3.0, CRLF) + `vcardDataUri` (data URI `text/vcard`)
+- `components/sections/ContactQrCode.tsx` (server async) : `qrcode` → SVG inline, `role="img"` + `aria-label`, lien `download="leon-heu.vcf"`
+- `app/contact/page.tsx` : section QR sous les canaux
+- Deps : `qrcode@^1.5.4` + `@types/qrcode`
+
+Couvre US-CT-02.
+
+Tests validés :
+- `npm run test:run` → **78 tests passants** (75 + vcard 2 + ContactQrCode 1 : SVG `role=img` + lien .vcf data URI)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/contact` statique
+
+---
+
+### Issue #71 — [3.7] Recherche client Fuse.js sur /projets
+
+Recherche temps réel (titre/résumé/tags) sur `/projets`, complémentaire du filtre tags serveur (#2.4).
+
+- `lib/project-search.ts` (pur) : `searchProjects(projects, query)` Fuse.js (`threshold 0.4`, `ignoreLocation`), requête vide → liste inchangée
+- `components/sections/ProjectsSearch.tsx` (client) : input `type="search"` labellisé (`sr-only`), `aria-controls`/`aria-live`, `useMemo` ; filtrage instantané (dataset réduit → pas de debounce, choix UX documenté) ; SSR rend la liste complète → dégradation propre sans JS
+- `app/projets/page.tsx` : `ProjectsListView` remplacé par `ProjectsSearch` (réutilise la vue liste + état vide)
+- Dép : `fuse.js@^7.3.0`
+
+Couvre US-PJ-03.
+
+Tests validés :
+- `npm run test:run` → **84 tests passants** (78 + project-search 4 + ProjectsSearch 2 : filtre live + état vide)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/projets` `ƒ`
+
+---
+
+### Issue #72 — [3.8] Page /mentions-legales rédigée
+
+Page légale (mode editorial) avec contenu réel et définitif (site vitrine sans collecte).
+
+- `app/mentions-legales/page.tsx` : metadata + 5 sections `aria-labelledby` — Éditeur (Léon HEU), Hébergement (Proxmox auto-hébergé + domaine OVH SAS Roubaix), Propriété intellectuelle, Données personnelles & cookies (aucune collecte, aucun traceur), Liens externes
+- Email réutilisé depuis `lib/data/socials.ts` ; lien depuis le footer (déjà présent)
+- Aucun placeholder, texte V1 définitif
+
+Couvre US-TR-04.
+
+Tests validés :
+- `npm run test:run` → **86 tests passants** (84 + MentionsLegales 2 : H1 + sections + absence de collecte)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/mentions-legales` statique
+
+---
+
+### Issue #73 — [3.9] sitemap.ts + robots.ts
+
+SEO de base via les metadata routes Next App Router.
+
+- `lib/seo.ts` (pur) : `siteUrl()` (`NEXT_PUBLIC_SITE_URL` défaut `https://leonheu.fr`, slash final retiré) + `buildSitemapEntries(base, slugs)` (6 routes statiques + pages projets, URLs absolues, priorités)
+- `app/sitemap.ts` : async, `getPublishedProjects()` (fallback mock → jamais d'échec build) → `buildSitemapEntries`
+- `app/robots.ts` : `allow: "/"` + `sitemap` absolu
+
+Couvre US-TR-05.
+
+Tests validés :
+- `npm run test:run` → **89 tests passants** (86 + seo 3 : siteUrl défaut/env, entrées statiques+projets)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/sitemap.xml` + `/robots.txt` générés (`○`)
+
+---
+
+### Issue #74 — [3.10] Tests TF-WEB recette manuelle (E2E CV / Contact / recherche)
+
+Extension de la suite Playwright (bloquante) avec les parcours Sprint 3.
+
+- `tests/e2e/cv-contact.e2e.spec.ts` :
+  - TF-WEB-04 `/cv` : h1 + section Expériences + bouton "Télécharger le CV en PDF"
+  - TF-WEB-04 `/contact` : lien email `mailto:` + GitHub + bouton "Copier l'adresse email"
+  - TF-WEB-08 `/projets` : recherche client → état vide sur requête sans résultat, retour liste à la réinitialisation
+- Déterministe sans DB (fallback mock pour `/projets`), reste dans le job `web-e2e-lighthouse` bloquant (aucun changement CI nécessaire)
+
+Couvre Cahier de tests TF-WEB-04, TF-WEB-08.
+
+Tests validés :
+- `npm run lint` / `npm run typecheck` → 0 ; TU unit inchangés (89)
+- ⚠ Régression : le spec contact violait le strict mode Playwright (lien Email présent aussi dans le Footer global) ; PR #85 mergée à tort sur CI rouge → corrigée par #86
+
+---
+
+### Issue #86 — [3.10-fix] E2E /contact strict-mode violation (régression #85)
+
+Correctif d'une régression : la PR #85 (#74) a été mergée alors que `web-e2e-lighthouse` était rouge (pas de branch protection requérant les checks). Le spec `/contact` matchait 2 liens « Email » (page **et** `Footer` global) → strict mode violation Playwright.
+
+- `tests/e2e/cv-contact.e2e.spec.ts` : toutes les requêtes `/cv` et `/contact` scopées à `page.getByRole("main")` (exclut Header/Footer)
+- Process corrigé : merge conditionné à une CI verte vérifiée explicitement (plus de merge chaîné inconditionnel)
+
+Tests validés :
+- Local : `npm run build` + `npm run test:e2e` → **5/5 specs verts** (projets + cv-contact)
+- CI `web-e2e-lighthouse` verte et bloquante avant merge (vérifiée)
+
+---
+
+### Issue #75 — [3.11] Sprint 3 review + release v0.4.0
+
+Clôture du Sprint 3 : revue, release develop→main, tag `v0.4.0`.
+
+- `Docs/claude/Sprint docs/sprint3-cv-contact-recherche.md` : issues + PRs, stack (qrcode, fuse.js), décisions (print sans Pandoc, recherche vs filtre, incident merge CI rouge #85→#86 + process corrigé), dette (recommandation branch protection), métriques (89 TU / 6 TF / 5 E2E), DoD §6 cochée, prépa Sprint 4 (Admin)
+- PR `release: Sprint 3 - CV / Contact / Recherche` develop→main (merge commit)
+- Tag `v0.4.0` + `gh release` ; milestone `M3` fermée
+- Mémoire projet mise à jour
+
+Tests validés :
+- Récap conforme au format Sprint 2, versions cohérentes
+- Toutes les issues Sprint 3 closed sur le Board, M3 fermée
+- CI verte sur `develop` avant release
+
+---
