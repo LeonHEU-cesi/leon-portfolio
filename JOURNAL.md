@@ -515,3 +515,23 @@ Tests validés :
 - CI verte sur `develop` (3 jobs) avant release
 
 ---
+
+## Sprint 3 — CV / Contact / Recherche
+
+### Issue #65 — [3.1] Page /cv : timeline expériences animée au scroll
+
+Page `/cv` en mode `editorial` avec timeline verticale antéchronologique, entrées révélées au scroll (Framer `whileInView`), rendu statique immédiat si `prefers-reduced-motion`.
+
+- `lib/data/cv.ts` : type `CvEntry` + `CV_EXPERIENCES` (formation CESI CDA + projets leon-portfolio / CESIZen — données factuelles, pas d'employeur fictif), `start` pour le tri
+- `components/sections/CvTimeline.tsx` : `CvTimelineView` (client) — `<ol>` bordée, puce, période/kind, rôle, org, points ; `motion.li` `whileInView` (once) gated `usePrefersReducedMotion`
+- `app/cv/page.tsx` : metadata, mode editorial (route sans préfixe tech), h1 + intro + section timeline
+- Tri antéchronologique (`start` desc) dans la vue
+
+Couvre US-CV-01 (expériences).
+
+Tests validés :
+- `npm run test:run` → **67 tests passants** (65 + CvTimeline 2 : rendu entrées + ordre antéchronologique)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/cv` rendu statique (`○`)
+
+---
