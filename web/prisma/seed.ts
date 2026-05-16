@@ -1,12 +1,27 @@
 import { PrismaClient, ProjectStatus, ArticleStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
+import { isPlaceholderSecret } from "../lib/admin-guard";
+
 const prisma = new PrismaClient();
 
 async function main() {
   const adminEmail = process.env.ADMIN_EMAIL ?? "leon@leonheu.fr";
   const adminPassword = process.env.ADMIN_PASSWORD ?? "change_me_avant_prod";
   const adminName = process.env.ADMIN_NAME ?? "Léon HEU";
+
+  // Garde sécurité : avertir (sans bloquer le seed dev) si le mot de passe
+  // admin ou AUTH_SECRET sont laissés à une valeur de placeholder/faible.
+  if (isPlaceholderSecret(adminPassword)) {
+    console.warn(
+      "[seed] ⚠ ADMIN_PASSWORD est faible ou par défaut — à changer impérativement avant toute mise en ligne.",
+    );
+  }
+  if (isPlaceholderSecret(process.env.AUTH_SECRET)) {
+    console.warn(
+      "[seed] ⚠ AUTH_SECRET absent ou faible — générer via `npx auth secret` avant le Sprint 4 (Auth.js).",
+    );
+  }
 
   const passwordHash = await bcrypt.hash(adminPassword, 12);
 

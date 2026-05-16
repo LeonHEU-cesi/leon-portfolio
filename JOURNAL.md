@@ -721,3 +721,258 @@ Tests validés :
 - CI verte sur `develop` avant release
 
 ---
+
+## Sprint 4 — Admin
+
+### Issue #90 — [4.1] Schéma admin — vérification (aucune nouvelle migration)
+
+Le schéma `User`/`Article`/`ArticleTag` (+ `Project`/`Tag`/`ProjectTag`) existe depuis le Sprint 0 (#14) et la baseline `20260516000000_init` (#42) le couvre. Vérification de parité avant le CRUD admin.
+
+- `git log -- web/prisma/schema.prisma` : un seul commit (#14) → schéma inchangé depuis le Sprint 0
+- Comparaison normalisée `prisma migrate diff --from-empty --to-schema-datamodel` vs migration committée : **73 lignes identiques** → parité stricte, aucune nouvelle migration requise
+- `prisma validate` → schéma valide
+- Champs suffisants pour l'admin : `User.role`, timestamps, relations `ProjectTag`/`ArticleTag`, enums statut
+
+Tests validés :
+- Parité schéma ↔ baseline migration prouvée (diff normalisé vide)
+- CI verte (branch protection désormais active sur develop/main)
+
+---
+
+### Issue #91 — [4.2] Seed admin — robustification + garde secret
+
+Le seed (#14) crée déjà 1 admin idempotent (`upsert`, bcrypt cost 12, env-driven). Robustification avant l'arrivée de l'auth.
+
+- `lib/admin-guard.ts` (pur) : `isPlaceholderSecret` (vide / < 12 car. / placeholder connu)
+- `prisma/seed.ts` : avertissement non bloquant si `ADMIN_PASSWORD` faible/défaut ou `AUTH_SECRET` absent/faible (hygiène avant Sprint 4 Auth.js) ; ne logue jamais le mot de passe
+- `.env.example` : ajout `ADMIN_NAME`
+- Idempotence/cost 12 confirmés (inchangés)
+
+Tests validés :
+- `npm run test:run` → **92 tests passants** (89 + admin-guard 3)
+- `npm run lint` / `npm run typecheck` → 0
+- CI verte (3 checks, branch protection)
+
+---
+
+### Issue #92 — [4.3] Setup Auth.js v5 (credentials Prisma + bcrypt)
+
+Authentification admin avec Auth.js v5 (`next-auth@beta`), provider Credentials, session JWT.
+
+- `auth.config.ts` **Edge-safe** (aucun import Prisma/bcrypt) : `pages.signIn=/login`, `session jwt`, `trustHost`, callbacks `authorized` (garde `/admin/*`), `jwt`/`session` (injectent `id`+`role`) — réutilisable par le middleware (#4.4)
+- `lib/credentials.ts` (pur) : `parseCredentials` (objet, email normalisé+regex, password présent) — testable
+- `auth.ts` (Node) : `NextAuth({...authConfig, providers:[Credentials({authorize})]})` ; `authorize` → `parseCredentials` → **import Prisma paresseux** (build sans `DATABASE_URL` OK) → `findUnique` → `bcrypt.compare` → `{id,email,name,role}` ou `null` (aucune énumération, pas de hash renvoyé)
+- `app/api/auth/[...nextauth]/route.ts` : `GET`/`POST` handlers
+- `types/next-auth.d.ts` : augmentation `Session`/`User`/`JWT` (id, role)
+- Branche `feat/web-authjs`, dép `next-auth@^5.0.0-beta.31`
+
+Couvre US-AD-01 (socle auth).
+
+Tests validés :
+- `npm run test:run` → **99 tests passants** (92 + credentials 3 + auth-config 4 : authorized garde /admin, jwt/session)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, route `/api/auth/[...nextauth]` (`ƒ`)
+
+---
+
+### Issue #93 — [4.4] Middleware Next.js de protection /admin/*
+
+Protection des routes admin via le middleware Auth.js (pattern split Edge-safe).
+
+- `middleware.ts` : `const { auth } = NextAuth(authConfig); export default auth;` (authConfig sans Prisma/bcrypt → Edge-safe), `matcher: ["/admin/:path*"]`
+- ⚠ Contrainte Next 16 : le middleware doit être un **export direct** (default ou `export const middleware`), **pas un export déstructuré** (`export const { auth: middleware }` → "must export a function"). 1re tentative rouge en CI (build), corrigée sur la même branche ; build désormais validé par **code retour** (pas par grep)
+- Le callback `authorized` (#92) renvoie `false` pour `/admin/*` sans session → Auth.js redirige vers `/login` avec `callbackUrl` automatique
+- Logique de garde déjà couverte par `auth-config.test.ts` (#92) ; parcours E2E prévu #4.15
+
+Couvre US-AD-01 (protection).
+
+Tests validés :
+- `npm run test:run` → 99 tests passants (inchangé — garde testée via authConfig)
+- `npm run lint` / `npm run typecheck` → exit 0
+- `npm run build` → exit 0, middleware reconnu (`ƒ Proxy (Middleware)`)
+
+---
+
+### Issue #94 — [4.5] Page /login + Server Action
+
+Page de connexion admin avec Server Action Auth.js, message d'erreur générique.
+
+- `app/login/actions.ts` (`"use server"`) : `authenticate(prev, formData)` → `signIn("credentials", { redirectTo })` ; `AuthError` → `{ error: "Identifiants invalides." }` (aucune énumération) ; redirections (succès) relancées ; `callbackUrl` validé (préfixe `/`)
+- `components/auth/LoginForm.tsx` (client) : `useActionState`, champs labellisés + `autoComplete`, `role="alert"` erreur, état `pending`, `callbackUrl` en input caché — action **injectée** (testable)
+- `app/login/page.tsx` : metadata `robots: noindex`, `searchParams.callbackUrl` (Promise Next 16), mode editorial
+
+Couvre US-AD-01 (login).
+
+Tests validés :
+- `npm run test:run` → **101 tests passants** (99 + LoginForm 2 : champs/callbackUrl + affichage erreur via action)
+- `npm run lint` / `npm run typecheck` → exit 0
+- `npm run build` → exit 0 (validé par code retour)
+
+---
+
+### Issue #95 — [4.6] Rate limit login (5 / 15 min)
+
+Protection anti-bruteforce sur la connexion.
+
+- `lib/rate-limit.ts` (pur, `now` injectable) : limiteur fenêtre fixe en mémoire (par instance serveur — suffisant V1 self-host, documenté), `rateLimit(key, limit, windowMs)` → `{ allowed, remaining, retryAfterMs }`, `_resetRateLimitStore` (tests)
+- `app/login/actions.ts` : clé `login:<ip>:<email>` (IP via `x-forwarded-for`), **5 / 15 min** ; dépassement → message **générique** "Trop de tentatives. Réessayez plus tard." (pas d'énumération)
+
+Couvre US-TR-03.
+
+Tests validés :
+- `npm run test:run` → **104 tests passants** (101 + rate-limit 3 : seuil, reset fenêtre, isolation des clés)
+- `npm run lint` / `npm run typecheck` → exit 0
+- `npm run build` → exit 0
+
+---
+
+### Issue #96 — [4.7] Page /admin dashboard
+
+Tableau de bord admin (protégé middleware, mode tech).
+
+- `lib/admin-stats.ts` : `getAdminStats()` (Prisma lazy `count`, fallback 0)
+- `app/admin/actions.ts` : `logout()` → `signOut({ redirectTo: "/login" })`
+- `components/admin/AdminDashboardView.tsx` (pur) : 3 compteurs, user, nav projets/tags/articles, bouton déconnexion (action injectée)
+- `app/admin/page.tsx` : `auth()` + `getAdminStats()`, `force-dynamic`, `robots noindex`
+
+Couvre US-AD-03.
+
+Tests validés :
+- `npm run test:run` → **105 tests passants** (104 + AdminDashboardView 1)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
+
+### Issue #97 — [4.8] /admin/projects liste + recherche + filtres
+
+- `lib/admin-projects.ts` : `listAdminProjects({q,status})` (tous statuts, recherche `title`/`slug` insensitive, filtre statut, Prisma lazy + fallback [])
+- `components/admin/AdminProjectsTable.tsx` (pur) : form GET recherche/statut, table, liens éditer + nouveau, état vide accessible
+- `app/admin/projects/page.tsx` : `searchParams` (Promise), `force-dynamic`, `robots noindex`
+
+Couvre US-AD-04 (liste).
+
+Tests validés :
+- `npm run test:run` → **109 tests passants** (105 + admin-projects 2 + AdminProjectsTable 2 ; fallback boilerplate non re-testé — déjà couvert ailleurs, mock de rejet fragile vitest)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
+
+### Issue #98 — [4.9] /admin/projects/new + Server Action create
+
+- `lib/project-input.ts` (pur) : `slugify` + `validateProjectInput(FormData)` (titre/résumé requis, slug auto, statut, tags CSV slugifiés/dédoublonnés)
+- `app/admin/projects/actions.ts` (`"use server"`) : `persist` partagé → `createProject`/`updateProject`/`deleteProject` ; slug unique vérifié, tags `connectOrCreate`, `revalidatePath` + `redirect` hors try (NEXT_REDIRECT non avalé)
+- `components/admin/ProjectForm.tsx` (client, réutilisable create/edit) : `useActionState`, champs labellisés, `role="alert"`, action injectée
+- `app/admin/projects/new/page.tsx` : `robots noindex`
+
+Couvre US-AD-04 (création).
+
+Tests validés :
+- `npm run test:run` → **114 tests passants** (109 + project-input 4 + ProjectForm 1)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
+
+### Issue #99 — [4.10] /admin/projects/[id] édition + delete
+
+- `lib/admin-project-detail.ts` : `toFormInitial` (pur) + `getAdminProject(id)` (lazy + fallback null)
+- `app/admin/projects/[id]/page.tsx` : `notFound()` si absent, `ProjectForm` pré-rempli + `updateProject.bind(null,id)`, form delete `deleteProject.bind(null,id)`, `force-dynamic noindex`
+- Réutilise les Server Actions `updateProject`/`deleteProject` (#98)
+
+Couvre US-AD-04 (édition/suppression).
+
+Tests validés :
+- `npm run test:run` → **115 tests passants** (114 + admin-project-detail 1)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
+
+### Issue #100 — [4.11] /admin/tags CRUD inline
+
+- `lib/tag-input.ts` (pur) : `normalizeTagName` (requis, ≤40, slug)
+- `lib/admin-tags.ts` : `listTags()` (+ `_count.projects`, lazy + fallback [])
+- `app/admin/tags/actions.ts` : `createTag` (slug unique), `renameTag(id)`, `deleteTag(id)`, `revalidatePath`
+- `components/admin/AddTagForm.tsx` (client, `useActionState`, `role="alert"`)
+- `app/admin/tags/page.tsx` : add form + rename/delete inline (Server Actions `bind`), état vide, `force-dynamic noindex`
+
+Couvre US-AD-05.
+
+Tests validés :
+- `npm run test:run` → **120 tests passants** (115 + tag-input 2 + admin-tags 1 + AddTagForm 2)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
+
+### Issue #101 — [4.12] Upload images /api/admin/upload + sharp
+
+- `lib/upload.ts` (pur) : `validateUpload(type, size)` (jpeg/png/webp, ≤ 5 Mo)
+- `app/api/admin/upload/route.ts` : `POST` — `auth()` obligatoire (401 sinon), validation, `sharp` **import paresseux** (resize 1600 inside + webp q80), nom `randomUUID().webp`, écriture `public/uploads` (gitignored), `201 { url }`
+- Dép : `sharp@^0.34.5`
+
+Couvre US-AD-06.
+
+Tests validés :
+- `npm run test:run` → **123 tests passants** (120 + upload 3 : formats, vide, trop volumineux)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0 (sharp en import paresseux → build OK)
+
+---
+
+### Issue #102 — [4.13] /admin/articles CRUD draft (sans publication V1)
+
+- `lib/article-input.ts` (pur) : `validateArticleInput` (titre/résumé requis, slug auto, tags CSV)
+- `lib/admin-articles.ts` : `listAdminArticles` + `articleToFormInitial` (pur) + `getAdminArticle` (lazy fallback null)
+- `app/admin/articles/actions.ts` : `persist` (create/update) **statut forcé `DRAFT`**, `deleteArticle`, slug unique, `connectOrCreate` tags, `redirect` hors try
+- `components/admin/ArticleForm.tsx` (client `useActionState`) + pages liste / new / `[id]` (édition + delete, `notFound`), `force-dynamic noindex`
+- Aucune route publique article (blog V2)
+
+Couvre US-AD-07.
+
+Tests validés :
+- `npm run test:run` → **126 tests passants** (123 + article-input 2 + admin-articles 1)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
+
+### Issue #103 — [4.14] Tests TF API admin (auth, CRUD, rate limit)
+
+- `tests/tf/admin.tf.test.ts` (projet vitest `tf`, vraie DB en CI ; `describe.skip` sans `DATABASE_URL`) : seed isolé (préfixe `tfadmin-`, cleanup avant/après)
+  - TF-AUTH-01/02 : `authorizeCore` (parseCredentials + `findUnique` + `bcrypt.compare`) — identifiants valides/invalides/inconnu
+  - TF-AD-01..07 : `listAdminProjects` (+filtre), `getAdminProject`, `listTags` (+compte), `listAdminArticles`/`getAdminArticle`, `getAdminStats`
+  - rate limit : blocage au-delà du seuil sur DB seedée
+
+Couvre Cahier TF-AD-01..07 / TF-AUTH-01,02.
+
+Tests validés :
+- Local : `lint`/`typecheck` exit 0, `test:run` 126 unit, `test:tf` 14 *skipped* (2 fichiers, pas de DB)
+- **CI `web-tests`** : 14 TF verts sur la DB de service (projets + admin) — preuve empirique sur la PR
+
+---
+
+### Issue #104 — [4.15] Tests E2E login admin
+
+- `tests/e2e/admin-login.e2e.spec.ts` (bloquant, scopé `<main>`) : TE-04 — `/admin` non connecté → redirection `/login` ; identifiants invalides → message générique
+- **Durcissement `auth.ts`** : `authorize` enveloppe le lookup Prisma/bcrypt dans un try/catch → renvoie `null` (réponse uniforme « invalide », jamais de 500 ni de fuite, anti-énumération) — corrige aussi le déterminisme E2E sans DB
+- `ci.yml` (`web-e2e-lighthouse`) : `env.AUTH_SECRET` factice au niveau du job (Auth.js configuré pour les E2E ; sans secret → erreur `Configuration` non déterministe)
+- Validé **en local** (`AUTH_SECRET` exporté, mirroir CI) : `npm run test:e2e` → **7/7 specs verts**
+
+Couvre Cahier TE-04.
+
+Tests validés :
+- Local : `lint`/`typecheck` exit 0, `test:run` 126 unit, `test:e2e` 7/7 (avec AUTH_SECRET)
+- **CI `web-e2e-lighthouse`** : E2E bloquants verts (AUTH_SECRET job) — preuve sur la PR
+
+---
+
+### Issue #105 — [4.16] Sprint 4 review + release v0.5.0
+
+Clôture du Sprint 4 (le plus chargé) : revue, release develop→main, tag `v0.5.0`.
+
+- `Docs/claude/Sprint docs/sprint4-admin.md` : 15 issues + PRs, stack (next-auth v5, sharp), décisions (split Edge/Node, authorize uniforme, export middleware, rate limit, upload, branch protection), dette, métriques (126 TU / 14 TF / 7 E2E), DoD §7 cochée, prépa Sprint 5 (Mobile)
+- PR `release: Sprint 4 - Admin` develop→main (merge commit) ; tag `v0.5.0` + `gh release` ; milestone M4 fermée
+- Mémoire projet mise à jour
+
+Tests validés :
+- Récap conforme au format Sprint 3, versions cohérentes
+- Toutes les issues Sprint 4 closed, M4 fermée
+- CI verte sur `develop` avant release
+
+---

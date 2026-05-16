@@ -78,6 +78,11 @@ jobs:
     needs: web-tests
     if: github.event_name == 'pull_request'
 
+    # Secret factice : configure Auth.js pour les E2E (parcours login/garde
+    # admin). Aucune session réelle ni DB ici — déterminisme uniquement.
+    env:
+      AUTH_SECRET: ci-e2e-dummy-secret-not-for-prod-0123456789
+
     defaults:
       run:
         working-directory: web

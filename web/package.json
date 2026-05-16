@@ -33,10 +33,12 @@
     "fuse.js": "^7.3.0",
     "gsap": "^3.15.0",
     "next": "16.2.6",
+    "next-auth": "^5.0.0-beta.31",
     "next-themes": "^0.4.6",
     "qrcode": "^1.5.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^5.2.1",
