@@ -946,3 +946,18 @@ Tests validés :
 - **CI `web-tests`** : 14 TF verts sur la DB de service (projets + admin) — preuve empirique sur la PR
 
 ---
+
+### Issue #104 — [4.15] Tests E2E login admin
+
+- `tests/e2e/admin-login.e2e.spec.ts` (bloquant, scopé `<main>`) : TE-04 — `/admin` non connecté → redirection `/login` ; identifiants invalides → message générique
+- **Durcissement `auth.ts`** : `authorize` enveloppe le lookup Prisma/bcrypt dans un try/catch → renvoie `null` (réponse uniforme « invalide », jamais de 500 ni de fuite, anti-énumération) — corrige aussi le déterminisme E2E sans DB
+- `ci.yml` (`web-e2e-lighthouse`) : `env.AUTH_SECRET` factice au niveau du job (Auth.js configuré pour les E2E ; sans secret → erreur `Configuration` non déterministe)
+- Validé **en local** (`AUTH_SECRET` exporté, mirroir CI) : `npm run test:e2e` → **7/7 specs verts**
+
+Couvre Cahier TE-04.
+
+Tests validés :
+- Local : `lint`/`typecheck` exit 0, `test:run` 126 unit, `test:e2e` 7/7 (avec AUTH_SECRET)
+- **CI `web-e2e-lighthouse`** : E2E bloquants verts (AUTH_SECRET job) — preuve sur la PR
+
+---
