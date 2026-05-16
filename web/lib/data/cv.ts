@@ -12,6 +12,48 @@ export type CvEntry = {
   points: string[];
 };
 
+export type CvSkillGroup = { category: string; items: string[] };
+export type CvFormation = { period: string; title: string; org: string };
+export type CvLangue = { name: string; level: string };
+
+export const CV_SKILLS: ReadonlyArray<CvSkillGroup> = [
+  {
+    category: "Front-end",
+    items: ["Next.js / React", "TypeScript", "Tailwind CSS", "Framer Motion / GSAP"],
+  },
+  {
+    category: "Back-end",
+    items: ["Node.js", "Laravel / PHP", "API REST", "Prisma / Eloquent"],
+  },
+  {
+    category: "Données & Infra",
+    items: ["PostgreSQL", "Docker Compose", "Caddy", "Proxmox (self-host)"],
+  },
+  {
+    category: "Mobile & Qualité",
+    items: ["Expo / React Native", "Vitest / Playwright", "GitHub Actions CI/CD", "Scrum / Git Flow"],
+  },
+];
+
+export const CV_FORMATIONS: ReadonlyArray<CvFormation> = [
+  {
+    period: "2024 — en cours",
+    title: "Concepteur Développeur d'Applications (RNCP niveau 6)",
+    org: "CESI — École d'ingénieurs",
+  },
+];
+
+export const CV_LANGUES: ReadonlyArray<CvLangue> = [
+  { name: "Français", level: "Langue maternelle" },
+  { name: "Anglais", level: "Technique — lecture/écriture courantes (B2)" },
+];
+
+export const CV_LOISIRS: ReadonlyArray<string> = [
+  "Homelab & auto-hébergement (Proxmox, Docker)",
+  "Veille technologique web & open source",
+  "Projets logiciels personnels",
+];
+
 export const CV_EXPERIENCES: ReadonlyArray<CvEntry> = [
   {
     id: "cesi-cda",

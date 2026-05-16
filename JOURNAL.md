@@ -535,3 +535,20 @@ Tests validés :
 - `npm run build` → succès, `/cv` rendu statique (`○`)
 
 ---
+
+### Issue #66 — [3.2] Sections Compétences + Formations + Langues + Loisirs
+
+Complète `/cv` avec 4 sections sémantiques sous la timeline.
+
+- `lib/data/cv.ts` : `CV_SKILLS` (4 groupes), `CV_FORMATIONS` (CESI CDA RNCP 6), `CV_LANGUES` (FR natif / EN B2), `CV_LOISIRS` — données factuelles
+- `components/sections/CvSections.tsx` : `CvSectionsView` (pur) — `<section aria-labelledby>` + h2/h3, compétences en chips groupées, listes formations/langues/loisirs, responsive
+- `app/cv/page.tsx` : rendu de `CvSectionsView` après la timeline
+
+Couvre US-CV-01 (sections).
+
+Tests validés :
+- `npm run test:run` → **68 tests passants** (67 + CvSections 1 : 4 sections + contenu)
+- `npm run lint` / `npm run typecheck` → 0
+- `npm run build` → succès, `/cv` statique
+
+---
