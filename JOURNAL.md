@@ -976,3 +976,17 @@ Tests validés :
 - CI verte sur `develop` avant release
 
 ---
+
+### Correctif post-S4 — LoginForm.test.tsx non commité (#94)
+
+Honnêteté/traçabilité : `web/tests/unit/LoginForm.test.tsx` (créé au #94) n'avait pas été ajouté au `git add` du commit 4.5 → resté **untracked**. Il s'exécutait en local (d'où les comptes TU du JOURNAL ≥ #94) mais **pas en CI** : `LoginForm` n'était pas couvert côté CI, et les comptes CI réels étaient inférieurs de 2 aux chiffres annoncés.
+
+- Fichier intégré au dépôt (2 tests : champs/callbackUrl + affichage erreur via action)
+- CI passe donc de 124 → **126 TU** (alignée sur le JOURNAL)
+- Leçon : vérifier `git status` (untracked) en fin d'issue, pas seulement `git add <chemins>` ciblés
+
+Tests validés :
+- `npm run test:run` → 126 (le fichier orphelin désormais tracké et exécuté en CI)
+- CI verte (branch protection)
+
+---
