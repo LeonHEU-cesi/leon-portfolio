@@ -689,6 +689,19 @@ Couvre Cahier de tests TF-WEB-04, TF-WEB-08.
 
 Tests validés :
 - `npm run lint` / `npm run typecheck` → 0 ; TU unit inchangés (89)
-- **CI `web-e2e-lighthouse`** : 2 specs Playwright (projets + cv-contact) vertes et bloquantes (preuve empirique sur la PR)
+- ⚠ Régression : le spec contact violait le strict mode Playwright (lien Email présent aussi dans le Footer global) ; PR #85 mergée à tort sur CI rouge → corrigée par #86
+
+---
+
+### Issue #86 — [3.10-fix] E2E /contact strict-mode violation (régression #85)
+
+Correctif d'une régression : la PR #85 (#74) a été mergée alors que `web-e2e-lighthouse` était rouge (pas de branch protection requérant les checks). Le spec `/contact` matchait 2 liens « Email » (page **et** `Footer` global) → strict mode violation Playwright.
+
+- `tests/e2e/cv-contact.e2e.spec.ts` : toutes les requêtes `/cv` et `/contact` scopées à `page.getByRole("main")` (exclut Header/Footer)
+- Process corrigé : merge conditionné à une CI verte vérifiée explicitement (plus de merge chaîné inconditionnel)
+
+Tests validés :
+- Local : `npm run build` + `npm run test:e2e` → **5/5 specs verts** (projets + cv-contact)
+- CI `web-e2e-lighthouse` verte et bloquante avant merge (vérifiée)
 
 ---
