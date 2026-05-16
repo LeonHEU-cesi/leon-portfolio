@@ -109,14 +109,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Pas de cache npm ici : mobile/ ne contient pas encore de
+      # package-lock.json (initialisation reportee au Sprint 5).
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: mobile/package-lock.json
 
       - name: Install
-        run: npm ci || echo "Sprint 0: mobile/ pas encore initialisé"
+        run: npm ci || echo "mobile non initialise (arrive au Sprint 5)"
         continue-on-error: true
 
       - name: Expo doctor
