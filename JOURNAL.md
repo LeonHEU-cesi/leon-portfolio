@@ -885,3 +885,19 @@ Tests validés :
 - `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
 
 ---
+
+### Issue #100 — [4.11] /admin/tags CRUD inline
+
+- `lib/tag-input.ts` (pur) : `normalizeTagName` (requis, ≤40, slug)
+- `lib/admin-tags.ts` : `listTags()` (+ `_count.projects`, lazy + fallback [])
+- `app/admin/tags/actions.ts` : `createTag` (slug unique), `renameTag(id)`, `deleteTag(id)`, `revalidatePath`
+- `components/admin/AddTagForm.tsx` (client, `useActionState`, `role="alert"`)
+- `app/admin/tags/page.tsx` : add form + rename/delete inline (Server Actions `bind`), état vide, `force-dynamic noindex`
+
+Couvre US-AD-05.
+
+Tests validés :
+- `npm run test:run` → **120 tests passants** (115 + tag-input 2 + admin-tags 1 + AddTagForm 2)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
