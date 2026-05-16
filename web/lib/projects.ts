@@ -47,18 +47,53 @@ async function loadPrisma() {
 
 const tagsInclude = { tags: { include: { tag: true } } } as const;
 
-export async function getPublishedProjects(): Promise<ProjectCard[]> {
+export async function getPublishedProjects(
+  tagSlugs: ReadonlyArray<string> = [],
+): Promise<ProjectCard[]> {
   try {
     const prisma = await loadPrisma();
     const rows = await prisma.project.findMany({
-      where: { status: ProjectStatus.PUBLISHED },
+      where: {
+        status: ProjectStatus.PUBLISHED,
+        // OR : un projet matche s'il porte au moins un des tags sélectionnés.
+        ...(tagSlugs.length > 0
+          ? { tags: { some: { tag: { slug: { in: [...tagSlugs] } } } } }
+          : {}),
+      },
       include: tagsInclude,
       orderBy: { createdAt: "desc" },
     });
     return rows.map((row) => mapProjectToCard(row));
   } catch (error) {
     console.error("[projects] getPublishedProjects a échoué, fallback mock:", error);
+    // Chemin dégradé : on ne sait pas filtrer le mock par slug de tag DB.
     return [...FEATURED_PROJECTS];
+  }
+}
+
+export type TagOption = { slug: string; name: string };
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+export async function getAllTags(): Promise<TagOption[]> {
+  try {
+    const prisma = await loadPrisma();
+    const rows = await prisma.tag.findMany({
+      orderBy: { name: "asc" },
+      select: { slug: true, name: true },
+    });
+    return rows;
+  } catch (error) {
+    console.error("[projects] getAllTags a échoué, fallback mock:", error);
+    const names = Array.from(
+      new Set(FEATURED_PROJECTS.flatMap((project) => project.tags)),
+    ).sort((a, b) => a.localeCompare(b));
+    return names.map((name) => ({ slug: slugify(name), name }));
   }
 }
 

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 
 import { ProjectsListView } from "@/components/sections/ProjectsList";
-import { getPublishedProjects } from "@/lib/projects";
+import { TagFilter } from "@/components/sections/TagFilter";
+import { getAllTags, getPublishedProjects } from "@/lib/projects";
+import { parseSelectedTags } from "@/lib/tag-filter";
 
 export const metadata: Metadata = {
   title: "Projets",
@@ -9,12 +11,21 @@ export const metadata: Metadata = {
     "Catalogue de mes réalisations : applications web, mobile, outillage et infrastructure self-host.",
 };
 
-// Page pilotée par la base (édition admin au Sprint 4) : pas de
-// pré-rendu statique au build, rendu à la requête.
+// Page pilotée par la base + filtres dans l'URL : rendu à la requête.
 export const dynamic = "force-dynamic";
 
-export default async function ProjetsPage() {
-  const projects = await getPublishedProjects();
+export default async function ProjetsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tags?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const selected = parseSelectedTags(params.tags);
+
+  const [projects, tags] = await Promise.all([
+    getPublishedProjects(selected),
+    getAllTags(),
+  ]);
 
   return (
     <section
@@ -37,6 +48,13 @@ export default async function ProjetsPage() {
             infrastructure self-host.
           </p>
         </header>
+
+        <TagFilter tags={tags} selected={selected} />
+
+        <p className="mb-6 text-sm text-[var(--secondary)]" aria-live="polite">
+          {projects.length} projet{projects.length > 1 ? "s" : ""}
+          {selected.length > 0 ? " filtré" + (projects.length > 1 ? "s" : "") : ""}
+        </p>
 
         <ProjectsListView projects={projects} />
       </div>
