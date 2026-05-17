@@ -95,7 +95,7 @@ Le projet livre **deux surfaces** consommant la même API REST documentée OpenA
 | Données mobile | **@tanstack/react-query 5** + `fetch` | ✅ | cache/refetch (pas d'axios) |
 | Stockage sécurisé mobile | — (non requis V1) | — | mobile en lecture, pas d'auth |
 | Design System | Storybook | **10.4.0** | stories tokens (extension écrans → V2) |
-| Documentation API | non implémenté V1 | — | zod-to-openapi/Scalar reporté V2 |
+| Documentation API | OpenAPI 3.1 (module pur) + Scalar `/api/docs` | ✅ | livré Sprint 7 (#189), CSP scopée |
 | Conteneurisation | Docker + Compose | ✅ | dev + **staging** (#6.11) |
 | Reverse proxy | Caddy 2 | ✅ | `Caddyfile` prod + `Caddyfile.staging` (TLS auto) |
 | Hébergement | Serveur Linux auto-hébergé (Docker) | cible | déploiement staging #6.11/#6.12 = étape mainteneur |
@@ -106,7 +106,7 @@ Le projet livre **deux surfaces** consommant la même API REST documentée OpenA
 | Tests perf | @lhci/cli **0.15** | ✅ | budgets (a11y/bp/seo error, perf warn) |
 | Mobile tests | jest-expo **55** + @testing-library/react-native | ✅ | `mobile-checks` CI réel+bloquant |
 | Sécurité | Headers CSP/HSTS/X-Frame (#6.1), magic-bytes upload (#6.2), rate limit | ✅ | revue OWASP `pentest-owasp.md` |
-| CI | GitHub Actions | ✅ | 3 jobs (réparée S2, durcie) + `deploy-staging` (gardé) ; branch protection active |
+| CI | GitHub Actions | ✅ | 3 jobs + `npm audit`/Dependabot (A06) + `deploy-staging`/`deploy-prod` gardés ; branch protection active |
 
 ### 2.2 Architecture (pas MVC strict)
 
