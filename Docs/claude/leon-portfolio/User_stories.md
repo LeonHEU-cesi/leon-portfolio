@@ -631,7 +631,7 @@ Stories différées V2. La structure DB et l'admin sont livrés V1.
 
 **Priorité :** P2    **Plateformes :** Web public
 
-- `/mentions-legales` avec : éditeur (toi), hébergeur (auto-hébergement Proxmox + OVH domaine), DPO (auto), contact
+- `/mentions-legales` avec : éditeur (toi), hébergeur (auto-hébergement auto-hébergement + le registrar domaine), DPO (auto), contact
 - Lien dans le footer
 - Pas de politique de confidentialité étendue (pas de tracking)
 

@@ -84,7 +84,7 @@ Cahier complet : [`Docs/claude/leon-portfolio/Cahier_de_tests.md`](./Docs/claude
 | [`mld.md`](./Docs/claude/leon-portfolio/mld.md) | Modèle Logique de Données (DBML + Prisma + DDL) |
 | [`comparatif-techniques.md`](./Docs/claude/leon-portfolio/comparatif-techniques.md) | 3 archis × 5 critères pondérés |
 | [`pertinence-solution.md`](./Docs/claude/leon-portfolio/pertinence-solution.md) | Argumentation choix Next.js full-stack |
-| [`installation.md`](./Docs/claude/leon-portfolio/installation.md) | Guide dev local + prod Proxmox |
+| [`installation.md`](./Docs/claude/leon-portfolio/installation.md) | Guide dev local + prod auto-hébergement |
 | [`procedure-validation.md`](./Docs/claude/leon-portfolio/procedure-validation.md) | 6 jalons de recette |
 | [`pv-recette.md`](./Docs/claude/leon-portfolio/pv-recette.md) | Modèle vierge |
 | [`dossier_final.md`](./Docs/claude/leon-portfolio/dossier_final.md) | Dossier projet 12 sections |
@@ -122,8 +122,8 @@ Cahier complet : [`Docs/claude/leon-portfolio/Cahier_de_tests.md`](./Docs/claude
 ## CI/CD
 
 - **CI** : GitHub Actions (3 jobs parallèles : web-tests / web-e2e-lighthouse / mobile-checks)
-- **CD staging** : auto sur merge `develop` → VM staging Proxmox
-- **CD prod** : auto sur merge `main` → VM prod Proxmox
+- **CD staging** : auto sur merge `develop` → VM staging auto-hébergée
+- **CD prod** : auto sur merge `main` → VM prod auto-hébergée
 
 ---
 

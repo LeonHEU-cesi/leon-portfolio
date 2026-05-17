@@ -170,7 +170,7 @@
 
 | Critère | A | B | C |
 |---|---|---|---|
-| Hébergement self-host Proxmox | ✅ image Docker standalone | ✅ 2 images | ✅ 2 images + serve static |
+| Hébergement self-host | ✅ image Docker standalone | ✅ 2 images | ✅ 2 images + serve static |
 | Coût (budget 0€) | ✅ tout dans 1 container | ✅ mais 2 containers | ✅ mais 2 containers |
 | Migration depuis V0 | Repo vide, neutre | Repo vide, neutre | Repo vide, neutre |
 | Recrutement futur (signal CV) | Next.js = stack très demandée 2026 | Astro émergent + Nest mature | Vite SPA = stack legacy 2026 |
@@ -189,7 +189,7 @@
 | Auth.js v5 encore en beta au moment du démarrage | Moyenne | Moyen | Pinning version + roadmap claire vers stable, fallback NextAuth v4 documenté |
 | Bundle JS trop lourd pour mobile 4G | Moyenne | Élevé | RSC max + audit Lighthouse + budget perf bloquant en CI |
 | GSAP ScrollTrigger côté SSR | Faible | Faible | Wrapper dans `'use client'`, fallback statique |
-| Coût free tier Vercel (si bascule) | N/A | N/A | Self-host Proxmox dès V1, pas de dépendance Vercel |
+| Coût free tier Vercel (si bascule) | N/A | N/A | Self-host dès V1, pas de dépendance Vercel |
 
 ---
 
@@ -203,6 +203,6 @@ Justifications principales :
 3. Animations React-first → GSAP/Framer idiomatique
 4. Admin CRUD avec Server Actions + middleware = très peu de boilerplate
 5. Mobile partage types et schémas via monorepo workspace (option `npm workspaces` ou simple package importé)
-6. Hébergement Docker standalone simple sur Proxmox
+6. Hébergement Docker standalone simple sur le serveur
 
 Cf. `pertinence-solution.md` pour l'argumentation détaillée.

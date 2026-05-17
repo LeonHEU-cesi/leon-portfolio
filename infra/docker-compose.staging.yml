@@ -1,4 +1,4 @@
-# Stack staging (VM Proxmox) : web Next + Postgres + Caddy.
+# Stack staging : web Next + Postgres + Caddy (aucune valeur réelle ici).
 # Déploiement : voir Docs/claude/leon-portfolio/deploiement-staging.md
 # Lancement : docker compose -f infra/docker-compose.staging.yml up -d --build
 
@@ -40,6 +40,8 @@ services:
     image: caddy:2-alpine
     container_name: leon-portfolio-caddy-staging
     restart: unless-stopped
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:?obligatoire}
     ports:
       - "80:80"
       - "443:443"

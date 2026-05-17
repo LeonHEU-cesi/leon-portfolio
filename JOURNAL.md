@@ -645,7 +645,7 @@ Tests validés :
 
 Page légale (mode editorial) avec contenu réel et définitif (site vitrine sans collecte).
 
-- `app/mentions-legales/page.tsx` : metadata + 5 sections `aria-labelledby` — Éditeur (Léon HEU), Hébergement (Proxmox auto-hébergé + domaine OVH SAS Roubaix), Propriété intellectuelle, Données personnelles & cookies (aucune collecte, aucun traceur), Liens externes
+- `app/mentions-legales/page.tsx` : metadata + 5 sections `aria-labelledby` — Éditeur (Léon HEU), Hébergement (auto-hébergement auto-hébergé + domaine (registrar) SAS Roubaix), Propriété intellectuelle, Données personnelles & cookies (aucune collecte, aucun traceur), Liens externes
 - Email réutilisé depuis `lib/data/socials.ts` ; lien depuis le footer (déjà présent)
 - Aucun placeholder, texte V1 définitif
 
@@ -1341,7 +1341,7 @@ Tests validés :
 
 ### Issue #165 — [6.12] DNS staging + certificat
 
-⚠ **Étape Léon** (registrar OVH + VM Proxmox + secrets GitHub) — non automatisable. Config livrée (#164). Issue **ouverte**, procédure documentée (`deploiement-staging.md` §2/§3, commentaire d'issue). Sprint timeboxé.
+⚠ **Étape Léon** (registrar + VM auto-hébergée + secrets GitHub) — non automatisable. Config livrée (#164). Issue **ouverte**, procédure documentée (`deploiement-staging.md` §2/§3, commentaire d'issue). Sprint timeboxé.
 
 ---
 

@@ -108,7 +108,7 @@ API web : aucune nouvelle dépendance (routes réutilisant la couche existante).
 
 ## 7. Préparation Sprint 6 — Hardening
 
-`Planning_Scrum.md` §9 : sécurisation OWASP, budgets perf Lighthouse bloquants, E2E complets, audit a11y, déploiement **staging** (`staging.leonheu.fr`, VM Proxmox). Inclut le rattrapage de la dette accumulée (Lighthouse CI, Plan_dev versions, nettoyage template mobile, refactor eslint-disable web).
+`Planning_Scrum.md` §9 : sécurisation OWASP, budgets perf Lighthouse bloquants, E2E complets, audit a11y, déploiement **staging** (`staging.leonheu.fr`, VM auto-hébergée). Inclut le rattrapage de la dette accumulée (Lighthouse CI, Plan_dev versions, nettoyage template mobile, refactor eslint-disable web).
 
 ---
 

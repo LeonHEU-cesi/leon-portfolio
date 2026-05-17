@@ -2,7 +2,7 @@
 
 **Projet :** leon-portfolio
 **Auteur :** HEU Léon
-**Version :** 1.0 — Procédure dev local + prod Proxmox
+**Version :** 1.0 — Procédure dev local + déploiement prod (générique)
 
 ---
 
@@ -24,7 +24,7 @@
 
 - Compte GitHub avec accès au repo `<username>/leon-portfolio`
 - Token GitHub PAT lecture publique pour l'API GitHub (cf. `.env.example`)
-- (Prod) Accès SSH à la VM Proxmox
+- (Prod) Accès SSH au serveur cible
 
 ---
 
@@ -50,7 +50,7 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/leonportfolio"
 AUTH_SECRET="<générer avec: npx auth secret>"
 AUTH_TRUST_HOST="true"
 GITHUB_TOKEN="ghp_..."
-ADMIN_EMAIL="leon@leonheu.fr"
+ADMIN_EMAIL="admin@example.com"
 ADMIN_PASSWORD="motdepasse_temporaire_a_changer"
 NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 ```
@@ -186,93 +186,54 @@ Le build cloud renvoie un lien de téléchargement APK.
 
 ---
 
-## 5. Déploiement Proxmox
+## 5. Déploiement
 
-### 5.1 Pré-requis sur la VM
+> Procédure **générique**. Les détails opérationnels réels (serveur,
+> registrar, IP, secrets) ne sont **pas** dans ce dépôt public : voir le
+> kit de déploiement privé tenu hors dépôt. Référence complète :
+> [`deploiement-prod.md`](./deploiement-prod.md).
 
-- VM Debian 12 minimum avec 2 vCPU / 4 GB RAM / 20 GB disque
-- Docker + Docker Compose installés (`apt install docker.io docker-compose-plugin`)
-- Port 80 et 443 NAT/PAT depuis la box vers la VM
-- DNS OVH configuré :
-  - `leonheu.fr` A → IP publique
-  - `www.leonheu.fr` CNAME → `leonheu.fr`
-  - `staging.leonheu.fr` A → IP publique
-- Clé SSH déployée (depuis GitHub Actions)
+### 5.1 Pré-requis serveur
 
-### 5.2 Structure prod sur la VM
+- Serveur Linux : Docker + plugin Compose
+- Ports 80/443 joignables depuis Internet
+- DNS `leonheu.fr` / `www` (+ `staging`) → adresse publique du serveur
+- Clé SSH dédiée au déploiement (secrets GitHub `PROD_SSH_*`)
 
-```
-/opt/leon-portfolio/
-├── docker-compose.yml
-├── Caddyfile
-├── .env
-├── data/
-│   └── postgres/          # Volume persistant
-├── uploads/                # Volume images projets
-└── backup/                 # pg_dump quotidiens
-```
-
-### 5.3 Démarrage initial
+### 5.2 Démarrage initial
 
 ```bash
-ssh root@<vm-prod>
 cd /opt/leon-portfolio
-docker compose pull
-docker compose up -d
-docker compose logs -f
+set -a && . infra/.env && set +a   # infra/.env hors versionnement
+docker compose -f infra/docker-compose.prod.yml up -d --build
+docker compose -f infra/docker-compose.prod.yml exec -T web npx prisma migrate deploy
+docker compose -f infra/docker-compose.prod.yml exec -T web npm run db:seed   # 1re fois
 ```
 
-### 5.4 Migration DB en prod
+### 5.3 Vérification HTTPS
 
 ```bash
-docker compose exec web npx prisma migrate deploy
-docker compose exec web npx prisma db seed  # Une seule fois
+curl -I https://leonheu.fr   # 200 + strict-transport-security
+cd web && SMOKE_BASE_URL=https://leonheu.fr npm run test:smoke
 ```
 
-### 5.5 Vérification HTTPS
+### 5.4 Backups + sauvegarde système
 
-```bash
-curl -I https://leonheu.fr
-# Vérifier Status: 200 + header strict-transport-security
-```
-
-### 5.6 Backup pg_dump quotidien
-
-Cron sur la VM dans `/etc/cron.daily/backup-leonportfolio` :
-
-```bash
-#!/bin/bash
-DATE=$(date +%Y%m%d)
-docker compose -f /opt/leon-portfolio/docker-compose.yml \
-  exec -T postgres pg_dump -U postgres leonportfolio | \
-  gzip > /opt/leon-portfolio/backup/dump-$DATE.sql.gz
-
-# Garder les 14 derniers
-find /opt/leon-portfolio/backup/ -name 'dump-*.sql.gz' -mtime +14 -delete
-```
-
-```bash
-chmod +x /etc/cron.daily/backup-leonportfolio
-```
-
-### 5.7 Snapshots Proxmox
-
-Dans l'UI Proxmox, ajouter une tâche de snapshot hebdomadaire (dimanche 03:00) avec rétention 4 semaines.
+- `infra/scripts/pg_backup.sh` en cron quotidien (dump gzip, rétention 14 j)
+- Restauration : `infra/scripts/pg_restore.sh <dump>`
+- Sauvegarde système périodique du serveur selon l'hébergeur (étape mainteneur)
 
 ---
 
-## 6. Mise à jour
+## 6. Mise à jour (CD auto)
 
-### 6.1 Déploiement staging (auto)
+- Push `develop` → `deploy-staging.yml` (SSH, `git pull`, `compose up -d
+  --build`, `migrate deploy`) — staging
+- Push `main` / tag `v*` → `deploy-prod.yml` (backup → pull → up → migrate
+  → smoke) — prod
 
-Sur merge `develop`, le workflow `deploy-staging.yml` :
-1. Build l'image Docker
-2. Push sur GitHub Container Registry (`ghcr.io/<username>/leon-portfolio-web:develop-<sha>`)
-3. SSH sur VM staging, `docker compose pull && up -d`
-
-### 6.2 Déploiement prod (auto)
-
-Sur merge `main` (via PR récap fin de sprint), workflow `deploy-prod.yml` similaire avec tag `latest` et VM prod.
+Les deux workflows sont **gardés** : no-op propre tant que les secrets
+`*_SSH_*` sont absents (non requis par la branch protection).
 
 ### 6.3 Rollback manuel
 
@@ -356,7 +317,7 @@ npm rebuild sharp
 
 | Rôle | Email | Mot de passe |
 |---|---|---|
-| Admin | `leon@leonheu.fr` (ou `ADMIN_EMAIL`) | `ADMIN_PASSWORD` (à changer en prod) |
+| Admin | `admin@example.com` (ou `ADMIN_EMAIL`) | `ADMIN_PASSWORD` (à changer en prod) |
 
 ⚠ En prod, changer `ADMIN_PASSWORD` au premier login (V2 ajout d'une UI de changement, V1 = via script Prisma direct).
 

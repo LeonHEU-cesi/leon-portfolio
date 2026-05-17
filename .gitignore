@@ -97,3 +97,12 @@ Docs/claude/Sprint docs/.tmp/
 *.bak
 *.sql.gz
 backup/
+infra/backups/
+
+# Déploiement — secrets/infra réels JAMAIS versionnés. Le dépôt ne contient
+# que des templates neutres ; les valeurs réelles vivent dans un kit privé
+# tenu HORS de ce dépôt (répertoire frère, non suivi par Git).
+infra/.env
+infra/.env.*
+**/*.local.env
+*.local.md
