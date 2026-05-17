@@ -1391,3 +1391,98 @@ Tests validés :
 - CI verte sur `develop` avant release
 
 ---
+
+## Sprint 7 — Release
+
+### Issue #189 — [7.4] OpenAPI 3.1 + UI Scalar /api/docs
+
+- `lib/openapi.ts` : document OpenAPI 3.1 **pur** (endpoints publics
+  uniquement, aucune route admin/auth) ; `/api/openapi` (JSON statique) +
+  `/api/docs` (Scalar via CDN jsDelivr, `noindex`)
+- CSP **scopée** à `/api/docs` (`buildScalarCsp` + `next.config.ts` source
+  exclut `/api/docs`) — CSP stricte globale inchangée
+
+Tests validés :
+- 8 TU (contrat OpenAPI + isolation CSP) ; lint/typecheck/build exit 0 ; 16 E2E
+
+---
+
+### Issue #190 #192 #193 #195 #196 — [7.5/7.7/7.8/7.10/7.11] CD prod + backups + smoke
+
+- `docker-compose.prod.yml` (vars obligatoires, `ACME_EMAIL` env) +
+  `deploy-prod.yml` **gardé** (no-op sans secrets) : backup→pull→up→migrate→smoke
+- `pg_backup.sh` / `pg_restore.sh` (gzip horodaté, rétention 14 j)
+- Harness smoke : `playwright.smoke.config.ts` + 8 specs TF-WEB-01..08
+- TLS auto Caddy (ACME via env) ; Storybook documenté (Caddy commenté)
+
+Tests validés :
+- lint/typecheck exit 0 ; YAML valide ; `bash -n` scripts OK
+- Incident : commit poussé sur `develop` par erreur → branch protection,
+  rattrapé sur branche, `develop` réaligné, PR normale verte
+
+---
+
+### Issue #201 — [7.14] Neutralisation des détails d'infra (dépôt public)
+
+Consigne mainteneur : le dépôt public ne doit pas divulguer l'infra.
+
+- Caddyfile(.staging) e-mail ACME → `{$ACME_EMAIL}` ; compose `ACME_EMAIL`
+  env ; jobs `deploy-*` génériques ; docs déploiement/installation/Plan_dev
+  §2.6 génériques ; `.env.example`/seed/fixture → `admin@example.com` ;
+  mentions-légales hébergement neutre ; docs narratifs (marque/topo retirées)
+- `.gitignore` durci (`infra/.env*`, `infra/backups/`) + `.gitattributes`
+  (LF `*.sh`) ; **kit de déploiement privé tenu hors dépôt**
+- Conservés (choix mainteneur) : e-mail contact Footer ; homelab CV/projet seed
+
+Tests validés :
+- lint/typecheck exit 0 ; 147 TU ; build exit 0 ; 16 E2E
+
+---
+
+### Issue #197 — [7.12] Dependabot + npm audit CI (OWASP A06)
+
+- `.github/dependabot.yml` : npm `/web` + npm `/mobile` + github-actions,
+  hebdo, MAJ minor/patch groupées, labels
+- `ci.yml` : `npm audit --audit-level=high` (continue-on-error) sur
+  web-tests + mobile-checks
+
+Tests validés :
+- YAML parsé OK ; étapes non bloquantes (pas de régression CI)
+
+---
+
+### Issue #186 #187 #188 — [7.1/7.2/7.3] Documentation finale
+
+- `dossier_final.md` **réécrit au réel** (stack v1.0.0, métriques, neutralité,
+  8 sprints, dette V2) — remplace le stub bootstrap obsolète
+- `installation.md` : troubleshooting réels (Auth.js `Configuration`,
+  Prisma baseline/P1001, CRLF `.sh`) + bloc rollback orphelin nettoyé +
+  liens/placeholders neutres
+- `procedure-validation.md` : smoke harness, A06 npm audit+Dependabot,
+  refs corrigées, **check-list V1 complète**
+
+Tests validés :
+- Docs pures (aucun code) ; CI verte
+
+---
+
+### Issue #198 — [7.13] Sprint 7 review + release v1.0.0
+
+Clôture **V1** (timeboxée — #191 DNS / #194 sauvegarde système = étapes hôte).
+
+- `Docs/claude/Sprint docs/sprint7-release.md` : issues+PRs, décisions
+  (OpenAPI pur, CSP scopée, neutralité+kit privé, CD gardé), 2 incidents
+  process interceptés, dette, métriques (147 TU/14 TF/16 E2E/8 smoke/10
+  jest, 0 eslint-disable), DoD §10 (hors live), bilan V1
+- `Plan_developpement.md` : Documentation API → implémentée (OpenAPI/Scalar)
+- Correction bookkeeping : #198 rouverte, #197 fermée (PR #203 mentionnait
+  `Closes #198` par erreur — #197 = Dependabot, #198 = review)
+- PR `release: Sprint 7 - Release` develop→main (merge commit), tag
+  `v1.0.0`, M7 fermée (timebox ; #191/#194 ouvertes documentées), `gh release`
+- Mémoire mise à jour
+
+Tests validés :
+- CI verte sur `develop` avant release ; récap conforme au format Sprint 6
+- M7 : seules #191/#194 (hôte) restent ouvertes, explicitement externes
+
+---
