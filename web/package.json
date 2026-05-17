@@ -23,6 +23,7 @@
     "test:run:all": "vitest run",
     "test:tf": "vitest run --project tf",
     "test:e2e": "playwright test",
+    "test:smoke": "playwright test --config playwright.smoke.config.ts",
     "test:storybook": "vitest run --project storybook",
     "lhci": "lhci autorun"
   },
