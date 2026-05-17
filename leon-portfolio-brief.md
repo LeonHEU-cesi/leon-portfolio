@@ -14,7 +14,7 @@
 | Contexte | Side project perso |
 | Objectifs | (1) Vitrine recruteurs / freelance, (2) Démo compétences techniques (anim, perf, a11y), (3) Hub GitHub centralisé, (4) Blog technique (V2) |
 | Référence externe | Carte blanche — 3 directions visuelles seront proposées au sprint Design |
-| Domaine de prod | `leonheu.fr` (OVH) |
+| Domaine de prod | `leonheu.fr` (registrar) |
 
 ---
 
@@ -97,7 +97,7 @@
 | CI/CD | GitHub Actions | — | 3 jobs : api+web / mobile / docs |
 | Conteneurisation | Docker Compose | latest | Prod self-hosted + dev local |
 | Reverse proxy prod | Caddy | latest | TLS auto Let's Encrypt, config minimale |
-| Hébergement prod | Proxmox VM (perso) | — | VM Debian + Docker stack |
+| Hébergement prod | VM auto-hébergée (perso) | — | VM Debian + Docker stack |
 | Build mobile | EAS Build | — | Free tier (limité) suffit pour APK demo |
 
 ### Architecture
@@ -116,7 +116,7 @@
 |---|---|
 | Délai | 5+ sprints d'1 semaine (≈ 5 sem mini, probablement 6-8 sem proprement vu le scope tests/CI) |
 | Cadence | Sprint 1 semaine compressée |
-| Budget | 0 € (hors domaine OVH ~10 €/an, free tiers, Proxmox perso) |
+| Budget | 0 € (hors domaine (registrar) ~10 €/an, free tiers, serveur perso) |
 | RGPD | Pas d'enjeu visiteur (mailto: au lieu de form, pas de cookies, pas de tracking, page mentions légales basique éditeur+hébergeur) |
 | Sécurité | HTTPS+HSTS, rate limiting (login admin + API contact), bcrypt, session sécurisée, pentest OWASP manuel avant prod |
 | Accessibilité | WCAG AA + `prefers-reduced-motion` honoré |
@@ -142,8 +142,8 @@
 ### CI/CD
 
 - **CI** : GitHub Actions, 3 jobs parallèles (api+web / mobile / docs+lighthouse)
-- **CD staging** : auto sur merge `develop` → image Docker pull sur VM staging Proxmox
-- **CD prod** : auto sur merge `main` → image Docker pull sur VM prod Proxmox
+- **CD staging** : auto sur merge `develop` → image Docker pull sur VM staging auto-hébergée
+- **CD prod** : auto sur merge `main` → image Docker pull sur VM prod auto-hébergée
 
 ---
 
@@ -187,7 +187,7 @@ On garde quand même la procédure de validation interne (recette personnelle av
 1. **Stack auth** : Auth.js v5 credentials + bcrypt. Session cookie côté web + JWT secondaire (court TTL) pour mobile. Alternative : auth maison plus légère mais moins outillée.
 2. **Reverse proxy** : Caddy retenu vs Traefik pour la simplicité de config TLS automatique. Traefik possible si tu veux du dashboard intégré.
 3. **CMS pour articles** : Markdown/MDX stocké en BDD (champ `content` TEXT) + rendu côté serveur. Pas de CMS headless externe (Sanity, Strapi) pour rester self-hosted.
-4. **Storage images** : volume Docker monté sur VM Proxmox, pas de S3/Cloudinary (budget 0 €). Backup via rsync sur autre disque.
+4. **Storage images** : volume Docker monté sur VM auto-hébergée, pas de S3/Cloudinary (budget 0 €). Backup via rsync sur autre disque.
 5. **GitHub API** : appels côté serveur Next.js avec cache ISR (revalidate toutes les 24h) pour éviter rate limit. Token PAT lecture publique en variable env.
 6. **Périmètre mobile V1** : consultation uniquement (catalogue projets + About + Contact). Pas d'auth, pas d'admin. Si tu veux l'auth mobile en V1, +1 sprint.
 7. **Délai initial 2-3 jours** : abandonné. Estimation honnête revue à **6-8 sprints d'1 semaine** vu la qualité demandée (Storybook, OpenAPI, Lighthouse CI, E2E, pentest, mobile).

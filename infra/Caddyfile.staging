@@ -1,8 +1,9 @@
 # Caddyfile staging — reverse proxy + TLS auto Let's Encrypt.
-# Déposé sur la VM, monté dans le conteneur caddy (compose staging).
+# Monté dans le conteneur caddy (compose staging). Aucune valeur réelle ici :
+# l'e-mail ACME est injecté via la variable d'environnement ACME_EMAIL.
 
 {
-  email leon@leonheu.fr
+  email {$ACME_EMAIL}
 }
 
 staging.leonheu.fr {

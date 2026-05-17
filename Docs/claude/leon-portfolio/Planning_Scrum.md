@@ -260,7 +260,7 @@ Sécurisation OWASP + budgets perf bloquants + tests E2E complets + audit access
 | 6.8 | Audit axe DevTools sur 5 pages publiques + corrections | scope-web, scope-tests | 2h | TS-A11Y-* |
 | 6.9 | Audit NVDA / VoiceOver manuel | scope-tests | 1h | TS-A11Y-03 |
 | 6.10 | OG images dynamiques + JSON-LD Person | scope-web | 2.5h | US-TR-06 |
-| 6.11 | Workflow `deploy-staging.yml` + VM staging Proxmox | scope-infra | 2.5h | — |
+| 6.11 | Workflow `deploy-staging.yml` + VM staging auto-hébergée | scope-infra | 2.5h | — |
 | 6.12 | DNS staging.leonheu.fr + certificat | scope-infra | 1h | — |
 
 **Estimation totale** : ~24h — second sprint chargé.
@@ -290,11 +290,11 @@ Documentation finalisée + dossier projet + mise en prod sur `leonheu.fr` + moni
 | 7.2 | `installation.md` finalisé + troubleshooting | scope-docs | 1.5h |
 | 7.3 | `procedure-validation.md` + check-list complète | scope-docs | 1h |
 | 7.4 | OpenAPI exposé via Scalar UI sur `/api/docs` | scope-web | 1.5h |
-| 7.5 | Workflow `deploy-prod.yml` + VM prod Proxmox | scope-infra | 2h |
+| 7.5 | Workflow `deploy-prod.yml` + VM prod auto-hébergée | scope-infra | 2h |
 | 7.6 | Configuration DNS leonheu.fr (A record) | scope-infra | 0.5h |
 | 7.7 | Certificat TLS Let's Encrypt prod | scope-infra | 0.5h |
 | 7.8 | Backup pg_dump quotidien + cron | scope-infra | 1h |
-| 7.9 | Snapshots Proxmox hebdo configurés | scope-infra | 0.5h |
+| 7.9 | Snapshots auto-hébergement hebdo configurés | scope-infra | 0.5h |
 | 7.10 | Smoke tests prod (TF-WEB-01 à 08 sur prod) | scope-tests | 2h |
 | 7.11 | PR release + tag v1.0.0 + release notes | scope-infra | 1h |
 | 7.12 | Storybook déployé sur `storybook.leonheu.fr` (optionnel) | scope-infra | 1h |
@@ -320,7 +320,7 @@ Documentation finalisée + dossier projet + mise en prod sur `leonheu.fr` + moni
 | Hero animé GSAP plus long que prévu | Moyenne | Moyen | Tampon dans Sprint 1, fallback animation simple si jeudi pas prêt |
 | Auth.js v5 beta breaking changes | Faible | Élevé | Pin version exacte dans package.json, suivi changelog |
 | GitHub API rate limit | Faible | Faible | Cache ISR 24h, fallback affichage cache stale |
-| Proxmox / DNS non joignable lors du déploiement | Faible | Élevé | Tester staging plusieurs fois avant prod, plan B Vercel preview |
+| auto-hébergement / DNS non joignable lors du déploiement | Faible | Élevé | Tester staging plusieurs fois avant prod, plan B Vercel preview |
 | Charge cognitive 8 sprints solo | Élevée | Moyen | Récap obligatoire + dette technique tracée, autorisation de reporter un sprint |
 | Test E2E Playwright flaky | Moyenne | Faible | Retry 2x, `test.slow()` sur scénarios lourds |
 | Budget Lighthouse non tenu (bundle Next trop gros) | Moyenne | Moyen | Audit + RSC max + dynamic imports |
@@ -356,7 +356,7 @@ Tag v1.0.0 attendu : fin S8 (≈ 2026-07-09).
 - [ ] OpenAPI accessible
 - [ ] Mentions légales à jour
 - [ ] Backup pg_dump testé en restoration
-- [ ] Snapshot Proxmox testé en restoration
+- [ ] Snapshot auto-hébergement testé en restoration
 - [ ] Sprint review final rédigé avec bilan + dette + roadmap V2
 - [ ] Mémoire Claude mise à jour (état du projet, dette, choix)
 
@@ -370,5 +370,5 @@ Tag v1.0.0 attendu : fin S8 (≈ 2026-07-09).
 | Internationalisation FR/EN | 2 sprints | next-intl + traductions + sitemap multilingue |
 | Auth mobile + admin mobile | 2 sprints | JWT secondaire + écrans admin |
 | Analytics self-host (Plausible local) | 0.5 sprint | Docker container + JS minimal |
-| Monitoring (Grafana + Loki) | 1 sprint | Sur Proxmox, dashboards Next.js + Postgres |
+| Monitoring (Grafana + Loki) | 1 sprint | Sur auto-hébergement, dashboards Next.js + Postgres |
 | Migration CMS headless (si volume articles élevé) | 2 sprints | Sanity / Strapi à arbitrer |

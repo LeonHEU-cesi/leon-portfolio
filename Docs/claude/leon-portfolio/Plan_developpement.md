@@ -98,7 +98,7 @@ Le projet livre **deux surfaces** consommant la même API REST documentée OpenA
 | Documentation API | non implémenté V1 | — | zod-to-openapi/Scalar reporté V2 |
 | Conteneurisation | Docker + Compose | ✅ | dev + **staging** (#6.11) |
 | Reverse proxy | Caddy 2 | ✅ | `Caddyfile` prod + `Caddyfile.staging` (TLS auto) |
-| Hébergement | Proxmox VE (Debian 12) | cible | déploiement staging #6.11/#6.12 = étape Léon |
+| Hébergement | Serveur Linux auto-hébergé (Docker) | cible | déploiement staging #6.11/#6.12 = étape mainteneur |
 | Build mobile | EAS Build | config `eas.json` preview | build cloud APK = étape Léon (#5.11) |
 | Tests unitaires | Vitest | **4.1.6** | projets `unit` (jsdom) + `tf` (node, vraie DB) |
 | Tests fonctionnels | Vitest projet `tf` sur Postgres CI (service) | ✅ | pas de testcontainers (service GitHub Actions) |
@@ -237,28 +237,25 @@ leon-portfolio/
 - Variable `EXPO_PUBLIC_API_URL` dans `mobile/.env`
 - Pas de token côté mobile en V1 (consultation publique uniquement)
 
-### 2.6 Hébergement prod (Proxmox)
+### 2.6 Hébergement prod
+
+Serveur Linux auto-hébergé, exposé en HTTPS, exécutant la stack
+Docker Compose :
 
 ```
-Box internet (IP fixe ou DDNS)
-  │
-  └── NAT 80/443 → VM Proxmox "portfolio-prod"
-                   │
-                   ├── Caddy (reverse proxy, TLS auto Let's Encrypt)
-                   │     ├── leonheu.fr           → Next.js container :3000
-                   │     ├── staging.leonheu.fr   → Next.js staging :3001
-                   │     └── storybook.leonheu.fr → Storybook :6006 (Basic Auth)
-                   │
-                   ├── Container Next.js (image GHCR)
-                   ├── Container Postgres 16 (volume persistant)
-                   └── Cron pg_dump quotidien → /backup/ (snapshot Proxmox hebdo)
+Serveur (HTTPS 80/443)
+  └── Caddy (reverse proxy, TLS auto Let's Encrypt)
+        ├── leonheu.fr           → conteneur Next.js :3000
+        ├── staging.leonheu.fr   → conteneur Next.js staging
+        └── storybook.leonheu.fr → Storybook (Basic Auth, optionnel)
+  ├── Conteneur Next.js (image standalone)
+  ├── Conteneur Postgres 16 (volume persistant)
+  └── Cron pg_dump quotidien + sauvegarde système périodique
 ```
 
-DNS OVH :
-- `leonheu.fr` A → IP publique
-- `www.leonheu.fr` CNAME → `leonheu.fr`
-- `staging.leonheu.fr` A → IP publique
-- `storybook.leonheu.fr` A → IP publique
+DNS (chez le bureau d'enregistrement) : `leonheu.fr` / `www` /
+`staging` / `storybook` → adresse publique du serveur. Détails
+opérationnels réels = kit de déploiement privé hors dépôt.
 
 ---
 
@@ -460,7 +457,7 @@ Total ≈ **8 semaines** pour un projet propre. Réajustable selon vélocité.
 - [ ] HSTS header présent (max-age >= 6 mois)
 - [ ] CSP header configuré
 - [ ] Backup pg_dump quotidien testé (restoration validée)
-- [ ] Snapshots Proxmox hebdo testés
+- [ ] Sauvegarde système périodique testée
 - [ ] Logs container Docker accessibles via `docker logs`
 
 ### 7.4 Sécurité

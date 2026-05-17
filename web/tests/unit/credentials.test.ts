@@ -16,8 +16,8 @@ describe("parseCredentials", () => {
   });
 
   it("normalise email (trim + lowercase) et conserve le mot de passe", () => {
-    expect(parseCredentials({ email: "  Leon@Leonheu.FR ", password: " pw " })).toEqual({
-      email: "leon@leonheu.fr",
+    expect(parseCredentials({ email: "  Admin@Example.COM ", password: " pw " })).toEqual({
+      email: "admin@example.com",
       password: " pw ",
     });
   });
