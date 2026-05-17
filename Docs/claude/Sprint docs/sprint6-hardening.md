@@ -22,7 +22,7 @@
 | #162 | [6.9] Checklist lecteur d'écran | #178 |
 | #163 | [6.10] OG images dynamiques + JSON-LD | #179 |
 | #164 | [6.11] deploy-staging workflow + compose | #180 |
-| #165 | [6.12] DNS staging + cert | ⏳ **étape Léon (OVH/VM/secrets)** — ouverte, documentée |
+| #165 | [6.12] DNS staging + cert | ⏳ **étape Léon (registrar/serveur/secrets)** — ouverte, documentée |
 | #166 | [6.13] MAJ Plan_developpement.md versions | #181 |
 | #167 | [6.14] Nettoyage composants template mobile | #182 |
 | #168 | [6.15] Refactor des 3 eslint-disable react-hooks | #183 |

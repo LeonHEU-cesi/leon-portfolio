@@ -1,0 +1,45 @@
+version: 2
+# Veille dépendances (OWASP A06). MAJ hebdo groupées pour limiter le bruit
+# de PR. Les MAJ majeures restent signalées mais non auto-mergées.
+updates:
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - type-chore
+      - scope-web
+      - dependencies
+    groups:
+      web-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
+    directory: /mobile
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - type-chore
+      - scope-mobile
+      - dependencies
+    groups:
+      mobile-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - type-chore
+      - scope-infra
+      - dependencies

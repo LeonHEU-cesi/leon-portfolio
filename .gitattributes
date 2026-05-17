@@ -1,0 +1,8 @@
+# Les scripts shell DOIVENT rester en LF : un CRLF casse le shebang
+# (`#!/usr/bin/env bash\r`) à l'exécution sur le serveur Linux.
+*.sh text eol=lf
+
+# Fichiers d'infra sensibles aux fins de ligne côté conteneur/serveur.
+*.yml text eol=lf
+Caddyfile text eol=lf
+Caddyfile.* text eol=lf

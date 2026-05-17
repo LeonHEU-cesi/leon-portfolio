@@ -3,8 +3,13 @@
 **Projet :** leon-portfolio — Portfolio personnel dynamique et animé
 **Auteur :** HEU Léon
 **Domaine de prod :** `leonheu.fr`
-**Version dossier :** 1.0 — initial (sera complété en fin de Sprint 7)
-**Format cible :** 10-15 pages PDF exportées via Pandoc ou impression Markdown
+**Version dossier :** 1.0 — finalisé en clôture Sprint 7 (release **v1.0.0**)
+**Format cible :** 10-15 pages (export PDF via impression Markdown)
+
+> Dépôt **public** : ce dossier et le dépôt ne divulguent **aucun détail
+> d'infrastructure réel** (hôte, registrar, IP, e-mails de service). Les
+> valeurs réelles sont tenues dans un **kit de déploiement privé hors
+> dépôt** (cf. §9.6).
 
 ---
 
@@ -15,7 +20,7 @@
 3. Périmètre fonctionnel V1
 4. Architecture technique
 5. Modèle de données
-6. Plan de développement et planning Scrum
+6. Déroulé Scrum (8 sprints)
 7. Tests et qualité
 8. Sécurité et conformité
 9. Déploiement et exploitation
@@ -29,328 +34,272 @@
 
 ### 1.1 Pitch
 
-**leon-portfolio** est un portfolio personnel dynamique et animé regroupant les projets, le parcours et les contributions open source de HEU Léon. L'objectif est triple :
-- Servir de **vitrine pour recruteurs et clients freelance** francophones
-- **Démontrer des compétences techniques** modernes (animations avancées, performance, accessibilité, mobile)
-- Centraliser un **hub GitHub** agrégeant les repos publics avec leur activité
+**leon-portfolio** est un portfolio personnel dynamique et animé regroupant
+les projets, le parcours et les contributions de HEU Léon. Objectif triple :
 
-Une structure de blog technique est prévue dès la V1 (admin + DB) mais la page publique des articles est différée en V2.
+- vitrine pour **recruteurs et clients freelance** francophones ;
+- **démonstration de compétences** (animations avancées, performance,
+  accessibilité, mobile, sécurité, CI/CD) ;
+- **hub GitHub** agrégeant les repos publics.
+
+La structure de blog est livrée en base + admin dès la V1 ; la page
+publique des articles est différée en V2.
 
 ### 1.2 Contexte
 
-Side project personnel sans contrainte client. Le délai initial souhaité (2-3 jours) a été rebasculé sur un planning honnête de **8 sprints d'1 semaine** vu le périmètre demandé (web + mobile + admin + tests E2E + Lighthouse + Storybook + pentest).
+Side project personnel sans contrainte client. Le délai initial souhaité
+(2-3 jours) a été rebasculé sur un planning honnête de **8 sprints d'une
+semaine** vu le périmètre (web + mobile + admin + API + tests
+E2E/axe/Lighthouse + pentest + CI/CD), exécuté en cadence compressée.
 
 ### 1.3 Domaine et hébergement
 
-- **Domaine** : `leonheu.fr` (OVH)
-- **Hébergement** : Proxmox personnel, VM Debian 12, Docker Compose
-- **Coût total** : 0 € hors domaine OVH (~10 €/an) — pas de SaaS payant
+- **Domaine** : `leonheu.fr`
+- **Hébergement** : serveur Linux auto-hébergé, Docker Compose
+- **Coût** : 0 € hors nom de domaine (~10 €/an) — aucun SaaS payant
 
 ---
 
 ## 2. Acteurs et public cible
 
-### 2.1 Acteurs
-
 | Acteur | Description | Plateformes | Droits |
 |---|---|---|---|
-| Visiteur public | Recruteur, client freelance, dev curieux | Web + Mobile | Lecture seule |
-| Admin (HEU Léon) | Auteur du portfolio | Web uniquement | CRUD projets, articles, tags + auth |
+| Visiteur public | Recruteur, client, dev curieux | Web + Mobile | Lecture seule |
+| Admin (HEU Léon) | Auteur du portfolio | Web uniquement | CRUD projets/articles/tags + auth |
 
-### 2.2 Public cible
-
-- **Cible principale** : recruteurs tech francophones (RH, CTO, lead dev)
-- **Cible secondaire** : pairs développeurs (signal CV via le repo open-source du portfolio lui-même)
-- **Langue** : Français exclusivement (i18n hors périmètre V1)
+- **Cible principale** : recruteurs tech francophones
+- **Cible secondaire** : pairs développeurs (le repo du portfolio est lui-même un signal)
+- **Langue** : Français (i18n hors périmètre V1)
 - **Accessibilité visée** : WCAG AA + respect strict `prefers-reduced-motion`
 
 ---
 
 ## 3. Périmètre fonctionnel V1
 
-### 3.1 Modules retenus
+### 3.1 Modules livrés
 
 | Module | Web public | Web admin | Mobile |
 |---|---|---|---|
-| Accueil | ✅ | — | ✅ (simplifié) |
+| Accueil animé | ✅ | — | ✅ (simplifié) |
 | Projets (catalogue + détail) | ✅ | ✅ CRUD | ✅ |
-| CV / Parcours | ✅ | — | ❌ (lien externe) |
+| Recherche/filtre projets | ✅ (fuse.js lazy) | — | ✅ |
+| CV / Parcours | ✅ (impression) | — | ❌ (lien web) |
 | About | ✅ | — | ✅ |
-| Contact | ✅ mailto | — | ✅ mailto + share |
+| Contact | ✅ `mailto:` | — | ✅ `mailto:` + share |
+| Hub GitHub | ✅ (ISR) | — | ❌ |
 | Articles (blog) | V2 | ✅ CRUD draft | ❌ |
-| Hub GitHub | ✅ | — | ❌ |
-| Auth admin | ❌ | ✅ Auth.js | ❌ |
+| Auth admin | ❌ | ✅ Auth.js v5 | ❌ |
+| API publique REST | ✅ `/api/projects(+/[slug])` | — | ✅ consommée |
+| Doc API | ✅ OpenAPI 3.1 + Scalar `/api/docs` | — | — |
 
 ### 3.2 Hors périmètre V1
 
-- Page publique du blog (différée V2)
-- Newsletter / mailing list
-- Commentaires sur articles
-- Analytics avancés (Plausible, Umami, GA)
-- Internationalisation (FR uniquement)
-- Tracker événements / dashboard analytics
-- Auth mobile (lecture publique uniquement V1)
+Page publique blog (V2), newsletter, commentaires, analytics, i18n,
+auth mobile (lecture publique uniquement).
 
-### 3.3 Backlog résumé
+### 3.3 Backlog
 
-35 user stories rédigées dans `User_stories.md`, réparties :
-- **Vitrine (VI)** : 6 stories
-- **Projets (PJ)** : 5 stories
-- **CV (CV)** : 2 stories
-- **Contact (CT)** : 2 stories
-- **Admin (AD)** : 7 stories
-- **Blog (BL)** : 2 stories V2
-- **Mobile (MOB)** : 5 stories
-- **Transverse (TR)** : 6 stories (sécurité, SEO, a11y)
-
-Couverture priorités :
-- P1 (Must) : 14 stories
-- P2 (Should) : 14 stories
-- P3 (Could) : 4 stories
-- P4 (Won't V1) : 3 stories
+35 user stories (`User_stories.md`) — Vitrine 6, Projets 5, CV 2, Contact
+2, Admin 7, Blog 2 (V2), Mobile 5, Transverse 6. Priorités : 14 P1, 14 P2,
+4 P3, 3 P4 (Won't V1).
 
 ---
 
 ## 4. Architecture technique
 
-### 4.1 Stack retenue
+### 4.1 Stack réelle (V1.0.0)
 
-| Couche | Technologie | Version cible |
+| Couche | Technologie | Version réelle |
 |---|---|---|
-| Framework web full-stack | Next.js | 15.x (App Router) |
-| Langage | TypeScript | 5.x strict |
-| Styling | Tailwind CSS | v4 |
-| Composants UI | shadcn/ui + Radix Primitives | latest |
-| Animations web | GSAP + Framer Motion | 3.x / 12.x |
-| Forms | React Hook Form + Zod | latest |
-| ORM | Prisma | 5.x |
-| Base de données | PostgreSQL | 16 |
-| Auth | Auth.js | 5.x (beta) |
-| Mobile | Expo SDK / React Native | 54+ / 0.81+ |
-| Animations mobile | React Native Reanimated | 3.x |
-| HTTP mobile | axios + TanStack Query | latest |
-| Stockage sécurisé mobile | expo-secure-store | latest |
-| Design System | Storybook | 8.x |
-| Documentation API | zod-to-openapi + Scalar | latest |
-| Conteneurisation | Docker + Docker Compose | latest |
-| Reverse proxy | Caddy | 2.x |
-| CI/CD | GitHub Actions | — |
-| Tests unitaires | Vitest | 2.x |
-| Tests E2E | Playwright | latest |
-| Tests perf | Lighthouse CI | latest |
-| Build mobile | EAS Build | free tier |
+| Framework web | Next.js (App Router, RSC, Server Actions, ISR, `output: standalone`) | **16.2.6** |
+| UI runtime | React / React DOM | **19.2.4** |
+| Langage | TypeScript strict (`noUncheckedIndexedAccess`) | 5.x |
+| Styling | Tailwind CSS (tokens OKLCH, variants editorial/tech/dark) | v4 |
+| Composants UI | Tailwind direct (pas de shadcn/Radix en V1) | — |
+| Animations web | gsap + framer-motion | 3.15 / 12.38 |
+| Validation | Server Actions + validateurs purs testés (`*-input.ts`) | — |
+| ORM | Prisma (baseline migration versionnée, `migrate deploy`) | **6.19.3** |
+| Base de données | PostgreSQL | 16-alpine |
+| Auth | Auth.js (next-auth) Credentials + bcryptjs, JWT, split Edge/Node | ^5.0.0-beta.31 |
+| API publique/mobile | Next Route Handlers + `fetch` (CORS, fallback) | — |
+| Doc API | OpenAPI 3.1 (module pur) + Scalar UI CDN, CSP scopée | 3.1.0 |
+| Mobile | Expo SDK / React Native | 54 / 0.81 |
+| Navigation mobile | expo-router (file-based, tabs) | v6 |
+| Animations mobile | react-native-reanimated (reduce-motion) | 4.1 |
+| Données mobile | @tanstack/react-query + `fetch` (pas d'axios) | 5 |
+| Design System | Storybook (stories tokens) | 10.4 |
+| Conteneurisation | Docker + Compose (dev/staging/prod) | — |
+| Reverse proxy | Caddy (TLS auto Let's Encrypt) | 2 |
+| Hébergement | Serveur Linux auto-hébergé | — |
+| Tests unitaires/intég. | Vitest (projets `unit` jsdom + `tf` Postgres réel) | 4.1.6 |
+| Tests E2E + a11y | Playwright + @axe-core/playwright | 1.60 / 4.11 |
+| Perf | @lhci/cli (budgets) | 0.15 |
+| Tests mobile | jest-expo + @testing-library/react-native | — |
+| CI/CD | GitHub Actions (3 jobs) + deploy-staging/prod gardés | — |
 
-Justification détaillée dans `comparatif-techniques.md` et `pertinence-solution.md`.
+Justification des choix : `comparatif-techniques.md`, `pertinence-solution.md`.
 
 ### 4.2 Architecture globale
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                      VISITEUR (web)                                   │
-└──────────────┬───────────────────────────────────────────────────────┘
-               │ HTTPS leonheu.fr
-               ▼
-        ┌──────────────┐
-        │    CADDY     │  TLS auto Let's Encrypt + reverse proxy
-        └──────┬───────┘
-               │
-               ▼
-        ┌─────────────────────────────────┐
-        │   NEXT.JS 15 (container Docker) │
-        │   ┌───────────┐  ┌──────────┐   │
-        │   │ App Router│  │   API    │   │
-        │   │   (RSC)   │  │ Route    │   │
-        │   │           │  │ Handlers │   │
-        │   └─────┬─────┘  └────┬─────┘   │
-        │         │             │         │
-        │         └──────┬──────┘         │
-        │                ▼                │
-        │         ┌──────────────┐        │
-        │         │   PRISMA     │        │
-        │         └──────┬───────┘        │
-        └────────────────┼────────────────┘
-                         ▼
-                  ┌──────────────┐
-                  │  POSTGRES 16 │ (volume Docker persistant)
-                  └──────────────┘
-                         │
-                         │ pg_dump quotidien
-                         ▼
-                  ┌──────────────┐
-                  │  /backup/    │
-                  └──────────────┘
+Visiteur web ──HTTPS leonheu.fr──► Caddy (reverse proxy, TLS auto)
+                                     │
+                                     ▼
+                       Next.js 16 (conteneur, standalone)
+                       ├─ App Router (RSC) + Server Actions
+                       ├─ Route Handlers /api/* (public + admin)
+                       └─ Prisma (import paresseux, fallback mock)
+                                     │
+                                     ▼
+                          PostgreSQL 16 (volume persistant)
+                                     │  pg_dump quotidien (script)
+                                     ▼
+                          Sauvegardes (rétention + système)
 
-        ┌─────────────────────────────────┐
-        │   MOBILE (Expo Go ou APK EAS)   │
-        │                                  │
-        │   axios + TanStack Query        │──── HTTPS api ────► leonheu.fr/api/*
-        │   expo-router + Reanimated 3    │
-        └─────────────────────────────────┘
+App mobile (Expo / APK EAS) ──fetch + TanStack Query──► leonheu.fr/api/projects
 ```
+
+Dégradation propre : le client Prisma est importé paresseusement et chaque
+accès données a un **fallback mock** → `next build` et la CI fonctionnent
+sans base. `migrate deploy` applique la baseline en CI (service Postgres)
+et en prod.
 
 ### 4.3 Structure monorepo
 
-Détail complet dans `Plan_developpement.md § 2.3`. Synthèse :
-
 ```
 leon-portfolio/
-├── web/              # Next.js 15 full-stack (front + API + Storybook)
-├── mobile/           # Expo SDK 54
-├── docs/             # Docs publiques dans le repo
-├── tests/            # Cahier de tests + procédures + PV
-├── infra/            # docker-compose + Caddyfile + scripts
-├── .github/          # Workflows CI/CD + templates
-└── ...
+├── web/        # Next.js 16 (front + API + Storybook + tests)
+├── mobile/     # Expo SDK 54
+├── infra/      # docker-compose.{dev,staging,prod}.yml + Caddyfile* + scripts/
+├── .github/    # workflows CI + deploy-* gardés + dependabot.yml
+├── Docs/        # documentation projet
+└── JOURNAL.md / *.md racine
 ```
 
-### 4.4 Choix architecturaux clés
+### 4.4 Décisions structurantes
 
 | Décision | Justification |
 |---|---|
-| Next.js full-stack (pas d'API séparée) | Solo dev → 1 codebase, Server Actions, Auth.js intégré |
-| Postgres + Prisma | Standard pro, type-safety end-to-end, migrations versionnées |
-| Auth.js v5 credentials + bcrypt | Mature, extensible (OAuth GitHub futur), middleware Next |
-| Caddy reverse proxy | Config minimale, TLS auto Let's Encrypt, dashboard pas critique |
-| GSAP + Framer Motion | Complémentaires (scroll-driven vs micro-interactions React) |
-| Expo plutôt que RN CLI ou Flutter | Zero setup natif, EAS Build gratuit, partage code TS web |
+| Next.js full-stack (pas d'API séparée) | Solo dev, 1 codebase, Server Actions, Auth.js intégré |
+| Prisma + Postgres, baseline versionnée | Type-safety, `migrate deploy` CI/prod reproductible |
+| Auth.js v5 Credentials + bcryptjs | `authorize` try/catch → `null` uniforme (anti-énumération) |
+| Import Prisma paresseux + fallback mock | Build/CI sans DB, résilience runtime |
+| OpenAPI 3.1 = module **pur** + Scalar CDN | Doc testable unitairement, zéro dépendance lourde |
+| `useSyncExternalStore` (matchMedia/hydratation) | Élimine `setState`-in-effect → **0 eslint-disable** |
+| Tailwind direct (pas shadcn) | Périmètre maîtrisé, tokens OKLCH maison |
+| Fuse.js en import dynamique | Hors bundle initial `/projets` (perf) |
+| Repo neutre + kit déploiement privé hors dépôt | Pas de divulgation d'infra sur un repo public |
 
 ---
 
 ## 5. Modèle de données
 
-### 5.1 Entités
-
-| Entité | Description | Cardinalités principales |
+| Entité | Description | Cardinalités |
 |---|---|---|
-| `User` | Compte admin (1 seul en pratique V1) | — |
-| `Project` | Projet curé (titre, slug, content MDX, image, status) | N-N avec `Tag` |
-| `Article` | Article blog (status draft/published, content MDX) | N-N avec `Tag` |
-| `Tag` | Tag partagé projets + articles | N-N avec `Project` et `Article` |
-| `ProjectTag`, `ArticleTag` | Tables pivot | — |
+| `User` | Compte admin (1 en pratique) | — |
+| `Project` | Projet curé (slug, content, status, isFeatured) | N-N `Tag` |
+| `Article` | Article blog (status draft/published) | N-N `Tag` |
+| `Tag` | Tag partagé projets/articles | N-N `Project`/`Article` |
+| pivots | `ProjectTag`, `ArticleTag` | — |
 
-Détail complet (DBML + DDL + Prisma) dans `mld.md`.
+Détail (DBML + Prisma + DDL) : `mld.md`. Volume V1 très faible (1 user,
+quelques dizaines de projets/tags) → index `slug`/`status` suffisants.
 
-### 5.2 Volume estimé V1
-
-| Table | Lignes V1 | Lignes V2 estimé |
-|---|---|---|
-| users | 1 | 1-3 |
-| projects | 5-20 | 30-50 |
-| articles | 0 publiés (5-10 draft) | 20-50 |
-| tags | 10-20 | 30 |
-| project_tags | 20-50 | 100 |
-| article_tags | 20-50 | 200 |
-
-Très faible volume → pas d'optimisation BDD particulière nécessaire au-delà des index slug et status.
-
-### 5.3 Backup et reprise
-
-- `pg_dump` quotidien automatique dans `/backup/` (rétention 14 jours)
-- Snapshot Proxmox hebdomadaire (rétention 4 semaines)
-- Procédure de restauration documentée dans `installation.md § 5.6`
+Sauvegarde/reprise : `infra/scripts/pg_backup.sh` (dump gzip quotidien,
+rétention 14 j) + `pg_restore.sh` ; sauvegarde système périodique côté
+hôte. Procédure : `deploiement-prod.md`.
 
 ---
 
-## 6. Plan de développement et planning Scrum
+## 6. Déroulé Scrum (8 sprints)
 
-### 6.1 Sprints (8 × 1 semaine)
-
-| Sprint | Focus | Période visée |
+| Sprint | Focus | Release |
 |---|---|---|
-| 0 — Foundations | Setup repo + stack + CI + direction visuelle | S1 |
-| 1 — Vitrine Hero | Accueil animé + Nav + About + Dark mode | S2 |
-| 2 — Projets | Catalogue + détail + GitHub API | S3 |
-| 3 — CV / Contact / Recherche | Timeline CV + PDF + Contact + Recherche client | S4 |
-| 4 — Admin | Auth.js + CRUD projets + articles draft + upload | S5 |
-| 5 — Mobile | Expo + tabs + écrans + EAS preview | S6 |
-| 6 — Hardening | Sécurité OWASP + Lighthouse + E2E + a11y | S7 |
-| 7 — Release | Docs + dossier + mise en prod + v1.0.0 | S8 |
+| 0 — Foundations | Repo, stack, CI, schéma/seed, direction visuelle | v0.1.0 |
+| 1 — Vitrine Hero | Accueil GSAP/ScrollTrigger, nav, burger mobile, About, dark mode | v0.2.0 |
+| 2 — Projets | Catalogue + détail + filtres + hub GitHub | v0.3.0 |
+| 3 — CV / Contact / Recherche | Timeline CV, contact, recherche client, branch protection | v0.4.0 |
+| 4 — Admin | Auth.js v5, CRUD projets/articles, upload sharp | v0.5.0 |
+| 5 — Mobile | Expo (tabs, écrans), API publique JSON, EAS preview | v0.6.0 |
+| 6 — Hardening | Headers sécurité, magic-bytes, axe bloquant, OWASP, Lighthouse CI, CD staging | v0.7.0 |
+| 7 — Release | OpenAPI/Scalar, CD prod gardé, backups, smoke, Dependabot, neutralisation, docs | **v1.0.0** |
 
-Détail dans `Planning_Scrum.md` : issues numérotées par sprint, estimations horaires, DoD, gantt.
-
-### 6.2 Cérémonies
-
-- Sprint planning lundi matin (30 min)
-- Daily : 2 min mental (solo)
-- Sprint review dimanche soir (30 min) + fichier `sprintN-titre.md`
-- Sprint retro intégrée au review
-
-### 6.3 Risques majeurs
-
-- **Charge cognitive 8 sprints solo** : autorisation de reporter 1 sprint si débordement
-- **Auth.js v5 beta** : pin version + suivi changelog
-- **Sprint 4 chargé (admin)** : tampon sur Sprint 5
-- **Pentest découvre faille bloquante (S6)** : tampon Sprint 7
+Cérémonies : planning lundi, review fin de sprint (`sprintN-*.md`),
+Conventional Commits, PR feature → `develop`, PR récap `develop` → `main`
+(merge commit) + tag `vX.Y.0`. CI verte **vérifiée explicitement** avant
+tout merge ; branch protection active sur `develop` et `main`.
 
 ---
 
 ## 7. Tests et qualité
 
-### 7.1 Types de tests
+### 7.1 Stratégie réelle
 
-| Type | ID | Outil | Périmètre |
+| Type | Outil | Périmètre | Volume V1 |
 |---|---|---|---|
-| Unitaires | TU-* | Vitest | Logique métier, helpers, hooks |
-| Fonctionnels API | TF-* | Vitest + Prisma testcontainers | Routes API, auth, CRUD |
-| Fonctionnels Web | TF-WEB-* | Recette manuelle Chrome/FF/Safari | Parcours visiteur |
-| Mobile | TM-* | Expo Go + cahier | Écrans, partage, perf mobile |
-| Non-régression | TNR-* | GitHub Actions | Sous-ensemble TU+TF+TE bloquant en PR |
-| Sécurité | TS-* | Manuel + curl | OWASP Top 10, headers, CORS |
-| E2E auto | TE-* | Playwright | Parcours critiques en CI |
-| Performance | TP-* | Lighthouse CI | Budgets bloquants en CI |
+| Unitaires (`unit`) | Vitest + Testing Library (jsdom) | logique, hooks, validateurs, OpenAPI | **147 TU** |
+| Fonctionnels (`tf`) | Vitest sur **Postgres réel** (service CI) | accès données, CRUD | **14 TF** |
+| E2E + a11y | Playwright + @axe-core/playwright | 6 specs, parcours + **axe bloquant** | **16 E2E** |
+| Smoke prod | Playwright (URL paramétrable) | post-déploiement TF-WEB-01..08 | **8 checks** |
+| Mobile | jest-expo + RNTL | composants/écrans | **10 jest** |
+| Perf | @lhci/cli | budgets a11y/bp/seo, perf warn | budgets CI |
 
-Catalogue complet dans `Cahier_de_tests.md` (60+ cas documentés).
+Pas de testcontainers : un **service Postgres GitHub Actions** + `prisma
+migrate deploy` fournit la base réelle des TF. Recette manuelle
+(mobile device, lecteur d'écran) : `procedure-validation.md`,
+`a11y-screenreader.md`, `mobile-recette.md`.
 
 ### 7.2 CI/CD
 
-- **CI** : GitHub Actions, 3 jobs en parallèle (web-tests / web-e2e-lighthouse / mobile-checks)
-- **CD staging** : auto sur merge `develop` → image Docker + SSH VM staging
-- **CD prod** : auto sur merge `main` → image Docker + SSH VM prod
-- **Concurrency** group `${{ github.ref }}` pour annuler les runs précédents
+GitHub Actions, 3 jobs : `Web (lint + typecheck + Vitest + TF)`,
+`Web (E2E Playwright + Lighthouse CI)` (PR-only, après `build`),
+`Mobile (expo-doctor + tsc + Jest)`. `npm audit` (high+) non bloquant
+(OWASP A06) + **Dependabot** 3 écosystèmes. CD `deploy-staging.yml`
+(push `develop`) et `deploy-prod.yml` (push `main` / tag `v*`) sont
+**gardés** : no-op propre sans secrets, non requis par la branch
+protection. Détail : §9.
 
-### 7.3 Budgets perf
+### 7.3 Qualité de code
 
-| Métrique | Seuil |
-|---|---|
-| Lighthouse Performance (accueil) | ≥ 90 |
-| Lighthouse Performance (autres pages) | ≥ 85 |
-| Lighthouse A11y | ≥ 95 |
-| Lighthouse SEO | ≥ 95 |
-| LCP | < 2.5s |
-| CLS | < 0.1 |
-| TBT | < 200ms |
+TypeScript strict, ESLint (eslint-config-next), **0 `eslint-disable
+react-hooks`**, validateurs purs testés unitairement, build vérifié par
+code retour (jamais un grep partiel).
 
 ---
 
 ## 8. Sécurité et conformité
 
-### 8.1 Mesures appliquées
+### 8.1 Mesures appliquées (Sprint 6)
 
-| Mesure | Détail |
+| Mesure | Détail (source `lib/security-headers.ts`) |
 |---|---|
-| HTTPS partout | Caddy + Let's Encrypt, redirect 301 HTTP→HTTPS |
-| HSTS | `max-age=15552000; includeSubDomains` (6 mois) |
-| CSP | `default-src 'self'; img-src 'self' https:; script-src 'self' 'unsafe-inline'` (relâché pour GSAP/Framer) |
-| Headers | X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin |
-| Hash mdp | bcrypt cost 12 |
-| Rate limit | Login : 5 / 15min, API publique : 100 / min |
-| Auth session | Cookie HTTP-only, SameSite=Lax, Secure prod |
-| Validation entrées | Zod côté serveur (Server Actions + Route Handlers) |
-| Upload | Validation MIME + magic bytes + taille + dimensions + compression sharp |
-| Logs Docker | `docker compose logs` accessible (V2 : Loki) |
+| CSP | `default-src 'self'` ; `script/style-src 'self' 'unsafe-inline'` ; `frame-ancestors 'none'` ; `object-src 'none'` (nonce → V2) |
+| CSP scopée | `/api/docs` élargie au CDN Scalar uniquement ; CSP stricte ailleurs |
+| HSTS | `max-age=63072000; includeSubDomains; preload` |
+| Headers | X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy |
+| Hash mdp | bcryptjs (cost 12) |
+| Auth | `authorize` try/catch → `null` uniforme (anti-énumération), rate limiting, middleware garde `/admin` |
+| Upload | magic-bytes (signature vs type déclaré) avant sharp + taille/dimensions |
+| XSS | contenu rendu **texte échappé** React (pas de `dangerouslySetInnerHTML` sur input) |
+| a11y/contraste | tokens OKLCH corrigés AA, audit **axe bloquant** (0 serious/critical, 5 pages) |
 
-### 8.2 RGPD
+Rapport OWASP Top 10 : `pentest-owasp.md`. Mesure live (Observatory,
+en-têtes) = post-déploiement côté mainteneur.
 
-Décision Bloc 5 : **pas d'enjeu RGPD réel** pour les visiteurs.
-- Pas de formulaire contact (lien `mailto:` direct → pas de traitement DP côté serveur)
-- Pas de cookies tracking
-- Pas d'analytics
-- Page mentions légales basique (éditeur + hébergeur + contact)
-- Seul l'admin = HEU Léon stocké en DB (auto-traitement, hors champ RGPD strict)
+### 8.2 RGPD / LCEN
 
-### 8.3 Pentest OWASP Top 10
+Pas d'enjeu RGPD réel : aucun formulaire serveur (`mailto:` direct),
+aucun cookie de tracking, aucun analytics. Mentions légales : éditeur
+identifié, hébergement décrit de façon **neutre** (auto-hébergement,
+sans divulgation d'infra). Seul l'admin (HEU Léon) est stocké en base.
 
-Audit manuel prévu en Sprint 6 (cf. `procedure-validation.md § 6`). Rapport stocké dans `Docs/claude/Sprint docs/sprint6-hardening-report.md`.
+### 8.3 Neutralité du dépôt public
+
+Sur consigne du mainteneur : le dépôt **ne divulgue aucune topologie
+d'hébergement** (hôte, registrar, IP, e-mails de service). Templates
+neutres + secrets via GitHub Actions / `infra/.env` hors versionnement +
+**kit de déploiement privé hors dépôt** (cf. §9.6). `.gitignore` durci,
+`.gitattributes` (LF obligatoire pour les scripts).
 
 ---
 
@@ -358,87 +307,102 @@ Audit manuel prévu en Sprint 6 (cf. `procedure-validation.md § 6`). Rapport st
 
 ### 9.1 Environnements
 
-| Environnement | URL | VM Proxmox | Branche |
+| Env | URL | Branche | Déclencheur CD |
 |---|---|---|---|
-| Dev local | localhost:3000 | — | feat/* |
-| Staging | staging.leonheu.fr | portfolio-staging | develop |
-| Production | leonheu.fr | portfolio-prod | main |
+| Dev local | `localhost:3000` | `feat/*` | — |
+| Staging | `staging.leonheu.fr` | `develop` | push `develop` |
+| Production | `leonheu.fr` | `main` | push `main` / tag `v*` |
 
-### 9.2 Process de release
+### 9.2 Stack de déploiement
 
-1. PRs feature → develop (review + CI verte + merge)
-2. Fin de sprint : PR récap `release: Sprint N` develop → main (merge après CI verte)
-3. Workflow `deploy-prod.yml` SSH VM prod
-4. Smoke tests prod (J5 cf. procedure-validation)
-5. Tag intermédiaire `v0.N.0` optionnel
-6. Tag `v1.0.0` après Sprint 7
+`infra/docker-compose.prod.yml` : `web` (Next standalone) + `postgres` +
+`caddy`. Variables sensibles **obligatoires** (`:?`), aucune valeur réelle
+dans le dépôt. Caddy émet/renouvelle le TLS (e-mail ACME via env
+`ACME_EMAIL`).
 
-### 9.3 Rollback
+### 9.3 Process de release
 
-- Toutes les images Docker taggées avec SHA commit + branche
-- Modification ligne `image:` dans `docker-compose.yml` sur la VM + `up -d`
-- Procédure documentée dans `installation.md § 6.3`
+PR feature → `develop` (CI verte vérifiée + merge). Fin de sprint : PR
+récap `develop` → `main` (**merge commit**, CI verte vérifiée), tag
+`vX.Y.0`, GitHub release. `deploy-prod.yml` (gardé) : backup → `git pull`
+→ `compose up --build` → `migrate deploy` → smoke.
 
-### 9.4 Monitoring V1
+### 9.4 Rollback
 
-- Logs Docker : `docker compose logs` (manuel)
-- Healthcheck Caddy : `GET /api/health` retourne 200 + version
-- Backup pg_dump quotidien testé en restoration
-- Snapshot Proxmox hebdo testé en restoration
+`git checkout <tag>` + `compose up -d --build` ; données via
+`pg_restore.sh` ; sinon sauvegarde système. Détail : `deploiement-prod.md`.
 
-### 9.5 Monitoring V2 (prévu)
+### 9.5 Monitoring V1 / V2
 
-- Loki + Grafana auto-hébergés sur Proxmox
-- Dashboards : requêtes/sec, latence, erreurs 5xx, taux 401
-- Alertes Telegram ou email sur erreurs
+V1 : logs Docker, smoke harness post-déploiement, backups testés en
+restauration. V2 : stack logs/metrics auto-hébergée + alerting (A09).
+
+### 9.6 Kit de déploiement privé (hors dépôt)
+
+Les valeurs réelles (hôte, registrar, IP, secrets, runbook opérationnel)
+vivent dans un répertoire **hors du dépôt Git**, jamais versionné. Le
+dépôt public ne contient que `deploiement-{prod,staging}.md` génériques.
+Étapes dépendantes de l'hôte (provisioning, DNS, secrets, sauvegarde
+système) = gestes du mainteneur, documentés neutrement.
 
 ---
 
 ## 10. Bilan technique et dette
 
-> Section à compléter en fin de Sprint 7 — voici le squelette.
+### 10.1 Métriques finales (v1.0.0)
 
-### 10.1 Métriques finales
+| Indicateur | Valeur |
+|---|---|
+| Sprints livrés | **8** (0 → 7) |
+| Releases GitHub | **8** (v0.1.0 → **v1.0.0**) |
+| Commits `develop` | ≈ 90 |
+| Pull Requests mergées | ≈ 100 (1 PR ≥ 1 issue, CI-gated) |
+| Tests web | **147 TU + 14 TF + 16 E2E + 8 smoke** |
+| Tests mobile | **10 jest** |
+| `eslint-disable react-hooks` | **0** |
+| Sécurité | headers CSP/HSTS, magic-bytes, axe bloquant, OWASP, Dependabot |
+| Incidents process | 2 commits sur `develop` par erreur — **bloqués/rattrapés via branch protection**, aucun impact |
 
-- Commits sur develop : _N_
-- Pull Requests mergées : _N_
-- Lignes de code : web _N_ / mobile _N_
-- Tests : _N_ TU, _N_ TF, _N_ TE, couverture _X_%
-- Lighthouse moyen : _N_ (perf), _N_ (a11y)
-- Temps total passé : _N_ h
+### 10.2 Dette technique (→ V2)
 
-### 10.2 Dette technique identifiée
+| Item | Raison du report |
+|---|---|
+| CSP nonce (retirer `'unsafe-inline'`) | Durcissement, complexité Next/Tailwind |
+| Page publique blog | Différée (structure DB/admin livrée) |
+| i18n FR/EN | Hors périmètre V1 |
+| Auth mobile + admin mobile | Lecture publique suffisante V1 |
+| Monitoring/alerting prod (A09) | Stack observabilité V2 |
+| Stories Storybook écrans (web/mobile) | Couverture Design System V2 |
+| Externalisation stockage images | Volume conteneur suffisant V1 |
+| Migration Auth.js stable v5 | Quand release stable (P1 sécurité) |
 
-À documenter au fil des sprints dans les `sprintN-titre.md` puis consolidée ici.
+### 10.3 Apprentissages
 
-Items prévisibles :
-- Bundle JS Next.js à optimiser (RSC max, dynamic imports)
-- Mobile : pas d'auth V1, structure prête pour V2
-- Logs / monitoring : `docker compose logs` minimaliste, Loki en V2
-- Upload images : volume Docker local, à externaliser S3-like en V2
-
-### 10.3 Choix structurants à relire
-
-- Décision API monolithique (Route Handlers Next) vs API séparée : OK pour V1, à réévaluer si volume requêtes mobile explose
-- Auth.js v5 beta : releaser stable V5 avant migration V2
-- Caddy vs Traefik : OK si pas plus de containers
+- **Branch protection = filet réel** : a stoppé 2 pushs directs `develop`
+  par erreur (oubli `git checkout -b`), zéro impact — toujours brancher avant d'éditer.
+- **CI verte vérifiée explicitement** avant merge (jamais
+  `watch ; merge` inconditionnel) ; build jugé au **code retour**.
+- **Valider E2E/axe en local** avant push (boucle ~30 s vs ~5 min CI) ;
+  auditer a11y en `reduced-motion`.
+- **`useSyncExternalStore`** : pattern propre matchMedia/hydratation.
+- **Repo public ≠ doc d'infra** : neutraliser tôt, kit réel hors dépôt.
 
 ---
 
 ## 11. Roadmap V2+
 
-| Évolution | Sprint estimé | Priorité |
-|---|---|---|
-| Pages publiques articles (blog V2) | 1 sprint | P1 |
-| Internationalisation FR + EN | 2 sprints | P2 |
-| Auth mobile + écrans admin mobile | 2 sprints | P3 |
-| Analytics self-host (Plausible local) | 0.5 sprint | P2 |
-| Monitoring (Grafana + Loki) | 1 sprint | P2 |
-| Image externalisée (MinIO sur Proxmox) | 0.5 sprint | P3 |
-| OAuth GitHub login admin | 0.5 sprint | P3 |
-| Migration Auth.js stable v5 (quand release) | 0.5 sprint | P1 (sécurité) |
-| Newsletter (V3) | 1 sprint | P4 |
-| Commentaires articles (V3) | 2 sprints | P4 |
+| Évolution | Priorité |
+|---|---|
+| Pages publiques blog | P1 |
+| Migration Auth.js stable v5 | P1 (sécurité) |
+| CSP nonce | P2 |
+| Monitoring/alerting auto-hébergé | P2 |
+| Analytics self-host | P2 |
+| i18n FR + EN | P2 |
+| Auth mobile + écrans admin mobile | P3 |
+| Stories Storybook écrans | P3 |
+| Externalisation images (objet) | P3 |
+| Newsletter / commentaires | P4 |
 
 ---
 
@@ -446,45 +410,45 @@ Items prévisibles :
 
 ### 12.1 Documents liés
 
-- `Plan_developpement.md` — Périmètre, stack, architecture, conventions GitHub
-- `Planning_Scrum.md` — Découpage en 8 sprints, issues estimées, gantt, risques
-- `User_stories.md` — 35 stories rédigées avec critères d'acceptation + traçabilité
-- `Cahier_de_tests.md` — 60+ cas (TU, TF, TF-WEB, TM, TS, TE, TP, TS-A11Y)
-- `mld.md` — Modèle Logique de Données (DBML + Prisma + DDL Postgres)
-- `comparatif-techniques.md` — 3 archis × 5 critères pondérés
-- `pertinence-solution.md` — Argumentation du choix Next.js full-stack
-- `installation.md` — Guide dev local + prod Proxmox + troubleshooting
-- `procedure-validation.md` — Recette en 6 jalons (J1 à J6)
-- `pv-recette.md` — Modèle vierge de PV interne
+- `Plan_developpement.md` — périmètre, stack, architecture, conventions
+- `Planning_Scrum.md` — 8 sprints, issues estimées, risques
+- `User_stories.md` — 35 stories + critères d'acceptation
+- `Cahier_de_tests.md` — catalogue TU/TF/TF-WEB/TM/TS/TE/TP
+- `mld.md` — modèle de données (DBML + Prisma + DDL)
+- `comparatif-techniques.md`, `pertinence-solution.md` — choix d'archi
+- `installation.md` — dev local + déploiement (générique) + troubleshooting
+- `procedure-validation.md` — recette par jalons + check-list
+- `deploiement-prod.md` / `deploiement-staging.md` — déploiement neutre
+- `pentest-owasp.md`, `a11y-screenreader.md`, `mobile-recette.md`
+- `Docs/claude/Sprint docs/sprint{0..7}-*.md` — revues de sprint
+- `pv-recette.md` — modèle vierge de PV
 
-### 12.2 Liens externes
+### 12.2 Liens
 
 | Lien | Description |
 |---|---|
 | https://leonheu.fr | Production |
-| https://staging.leonheu.fr | Staging |
-| https://storybook.leonheu.fr | Storybook (Basic Auth) |
 | https://leonheu.fr/api/docs | OpenAPI Scalar UI |
-| https://github.com/<username>/leon-portfolio | Repo source |
-| https://github.com/<username>/leon-portfolio/projects | Project Board |
+| https://leonheu.fr/api/projects | API publique (JSON) |
+| https://github.com/LeonHEU-cesi/leon-portfolio | Dépôt source |
+| https://github.com/LeonHEU-cesi/leon-portfolio/releases | Releases v0.1.0 → v1.0.0 |
 
 ### 12.3 Comptes de test
 
 | Rôle | Identifiant | Mot de passe |
 |---|---|---|
-| Admin | `ADMIN_EMAIL` env | `ADMIN_PASSWORD` env (à changer en prod) |
+| Admin | `ADMIN_EMAIL` (env) | `ADMIN_PASSWORD` (env, à changer en prod) |
 
 ### 12.4 Glossaire
 
 | Terme | Définition |
 |---|---|
-| App Router | Système de routage Next.js basé sur les dossiers `app/` |
-| RSC | React Server Components — composants rendus côté serveur |
-| ISR | Incremental Static Regeneration — pages statiques revalidées à la demande |
-| MDX | Markdown + JSX — Markdown avec composants React intégrés |
-| Server Actions | Fonctions Next.js callables depuis un form, sans endpoint API explicite |
-| WCAG AA | Niveau d'accessibilité moyen (contraste 4.5:1, navigation clavier, etc.) |
-| OWASP Top 10 | Top 10 des vulnérabilités web par l'OWASP Foundation |
-| EAS Build | Service de build cloud d'Expo |
-| ScrollTrigger | Plugin GSAP pour animations scroll-driven |
-| Reanimated | Lib animations React Native 60fps via worklets natifs |
+| App Router | Routage Next.js basé sur `app/` |
+| RSC | React Server Components |
+| ISR | Incremental Static Regeneration |
+| Server Actions | Fonctions serveur appelables depuis un form |
+| OpenAPI / Scalar | Spec API 3.1 + UI de référence |
+| WCAG AA | Niveau d'accessibilité (contraste 4.5:1, clavier…) |
+| OWASP Top 10 | Top 10 des vulnérabilités web |
+| EAS Build | Build cloud Expo |
+| Branch protection | Règles GitHub bloquant un merge sur CI rouge |

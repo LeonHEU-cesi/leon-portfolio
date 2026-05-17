@@ -1,10 +1,10 @@
-# Caddyfile — configuration reverse proxy prod
-# À déposer sur la VM Proxmox dans /opt/leon-portfolio/Caddyfile
-# Caddy s'occupe automatiquement de l'obtention et du renouvellement des certificats Let's Encrypt.
+# Caddyfile — configuration reverse proxy prod.
+# Monté dans le conteneur caddy (compose prod). Aucune valeur réelle ici.
+# Caddy gère seul l'obtention/renouvellement des certificats Let's Encrypt.
 
 {
-  # email pour Let's Encrypt
-  email leon@leonheu.fr
+  # E-mail ACME injecté via la variable d'environnement ACME_EMAIL.
+  email {$ACME_EMAIL}
 }
 
 leonheu.fr, www.leonheu.fr {

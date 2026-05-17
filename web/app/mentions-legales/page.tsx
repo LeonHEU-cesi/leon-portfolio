@@ -40,9 +40,9 @@ export default function MentionsLegalesPage() {
             Hébergement
           </h2>
           <p className="text-[var(--secondary)]">
-            Site auto-hébergé sur une infrastructure personnelle (Proxmox). Le
-            nom de domaine est enregistré auprès d&apos;OVH SAS, 2 rue
-            Kellermann, 59100 Roubaix, France.
+            Site auto-hébergé sur une infrastructure personnelle. Le nom de
+            domaine est enregistré auprès d&apos;un bureau d&apos;enregistrement
+            français.
           </p>
         </section>
 

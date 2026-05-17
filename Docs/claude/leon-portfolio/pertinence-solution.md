@@ -12,7 +12,7 @@
 | Contrainte | Implication |
 |---|---|
 | Budget 0 € | Self-host obligatoire, free tiers uniquement |
-| Hébergement Proxmox perso | Image Docker portable, reverse proxy local, TLS auto |
+| Hébergement serveur perso | Image Docker portable, reverse proxy local, TLS auto |
 | Solo dev | Codebase à charge cognitive limitée, un seul stack |
 | Mobile compagnon | Partage de types et schémas indispensable |
 | Animations avancées | React-first, écosystème animation mature |
@@ -73,7 +73,7 @@
 | Critère | Postgres + Prisma | SQLite + Prisma | MongoDB + Mongoose |
 |---|---|---|---|
 | Standard pro (signal CV) | ✅ Top demandé 2026 | ❌ Embedded only | ✅ encore demandé |
-| Hébergement Proxmox | ✅ Container Docker standard | ✅ fichier local | ✅ Container |
+| Hébergement auto-hébergé | ✅ Container Docker standard | ✅ fichier local | ✅ Container |
 | Migrations | ✅ Prisma Migrate (versionnées) | ✅ idem | ⚠ pas de schéma strict |
 | Relations many-to-many | ✅ pivot SQL classique | ✅ idem | ⚠ embed vs ref débat |
 | Full-text search | ✅ tsvector + GIN | ⚠ FTS5 module | ⚠ Atlas Search (cloud) |
@@ -142,7 +142,7 @@
 L'architecture **Next.js 15 full-stack + Expo Mobile + Postgres/Prisma + Caddy** est retenue pour V1 car elle :
 
 1. ✅ Maximise la productivité d'un solo dev (un seul codebase web)
-2. ✅ Honore toutes les contraintes (0 € de SaaS, self-host Proxmox, WCAG AA, SEO/OG dynamique)
+2. ✅ Honore toutes les contraintes (0 € de SaaS, self-host, WCAG AA, SEO/OG dynamique)
 3. ✅ Permet animations avancées React-first (GSAP + Framer)
 4. ✅ Partage proprement les types et schémas avec le mobile Expo
 5. ✅ Reste évolutive : l'API peut être extraite plus tard sans réécrire le front
