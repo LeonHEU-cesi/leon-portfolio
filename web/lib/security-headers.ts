@@ -20,8 +20,33 @@ export function buildCsp(): string {
     .join('; ');
 }
 
-export const securityHeaders: { key: string; value: string }[] = [
-  { key: 'Content-Security-Policy', value: buildCsp() },
+// CSP assouplie pour la seule route /api/docs : Scalar est chargé depuis
+// jsDelivr (script + styles + polices) et récupère le spec same-origin.
+// Le reste du site garde la CSP stricte (cf. next.config.ts, source exclut
+// /api/docs). 'unsafe-eval' scopé ici uniquement (#7.4).
+const SCALAR_CDN = 'https://cdn.jsdelivr.net';
+
+export function buildScalarCsp(): string {
+  return buildCsp()
+    .replace(
+      "script-src 'self' 'unsafe-inline'",
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${SCALAR_CDN}`,
+    )
+    .replace(
+      "style-src 'self' 'unsafe-inline'",
+      `style-src 'self' 'unsafe-inline' ${SCALAR_CDN} https://fonts.googleapis.com`,
+    )
+    .replace(
+      "font-src 'self' data:",
+      `font-src 'self' data: ${SCALAR_CDN} https://fonts.gstatic.com`,
+    )
+    .replace(
+      "connect-src 'self' https:",
+      `connect-src 'self' https: ${SCALAR_CDN}`,
+    );
+}
+
+const sharedHardeningHeaders: { key: string; value: string }[] = [
   {
     key: 'Strict-Transport-Security',
     value: 'max-age=63072000; includeSubDomains; preload',
@@ -33,4 +58,16 @@ export const securityHeaders: { key: string; value: string }[] = [
     key: 'Permissions-Policy',
     value: 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
   },
+];
+
+export const securityHeaders: { key: string; value: string }[] = [
+  { key: 'Content-Security-Policy', value: buildCsp() },
+  ...sharedHardeningHeaders,
+];
+
+// Mêmes garanties (HSTS, nosniff, anti-clickjacking…) mais CSP élargie au
+// CDN Scalar, appliquée uniquement à /api/docs.
+export const scalarSecurityHeaders: { key: string; value: string }[] = [
+  { key: 'Content-Security-Policy', value: buildScalarCsp() },
+  ...sharedHardeningHeaders,
 ];
