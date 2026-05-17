@@ -46,6 +46,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Veille vulnérabilités (OWASP A06) — signalement non bloquant
+      # (advisories transitives variables ; le gate reste lint/types/tests).
+      - name: npm audit (high+)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
       - name: Lint
         run: npm run lint
 
@@ -133,6 +139,10 @@ jobs:
 
       - name: Install
         run: npm ci
+
+      - name: npm audit (high+)
+        run: npm audit --audit-level=high
+        continue-on-error: true
 
       - name: Lint
         run: npm run lint
