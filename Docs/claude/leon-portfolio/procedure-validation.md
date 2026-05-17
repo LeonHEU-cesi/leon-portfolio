@@ -102,7 +102,7 @@ Cette procédure décrit la **recette personnelle** avant chaque mise en ligne (
    - [ ] A03 Injection : injection SQL (TS-INPUT-01), XSS (TS-INPUT-02), NoSQL n/a
    - [ ] A04 Insecure Design : revue du modèle d'auth, rate limit testé
    - [ ] A05 Security Misconfiguration : headers (CSP, HSTS, X-Frame), pas de stack trace en prod, robots.txt OK
-   - [ ] A06 Vulnerable Components : `npm audit` propre, `pnpm dlx better-npm-audit`
+   - [ ] A06 Vulnerable Components : `npm audit --audit-level=high` (étape CI non bloquante) + **Dependabot** (3 écosystèmes, hebdo)
    - [ ] A07 Identification and Authentication Failures : rate limit, MFA n/a V1, session secure cookie
    - [ ] A08 Software and Data Integrity Failures : `npm ci` en prod, lockfile commit, pas d'eval()
    - [ ] A09 Security Logging and Monitoring : logs Docker, alertes (V2)
@@ -119,29 +119,32 @@ Cette procédure décrit la **recette personnelle** avant chaque mise en ligne (
 - ✅ Tests axe + NVDA OK
 
 ### Rapport
-Fichier `Docs/claude/Sprint docs/sprint6-hardening-report.md` listant chaque item avec statut + capture.
+`Docs/claude/leon-portfolio/pentest-owasp.md` (rapport OWASP Top 10) +
+`Docs/claude/Sprint docs/sprint6-hardening.md` (revue) — chaque item avec
+statut. Audit axe **bloquant en CI** (0 serious/critical, 5 pages).
 
 ---
 
 ## 7. Procédure J5 — Smoke prod
 
-### Étapes (5 min après deploy prod)
+### Étapes (après chaque deploy prod)
 
-1. `curl -I https://leonheu.fr` → status 200, HSTS présent
-2. Ouvrir la page d'accueil → hero animé visible
-3. Cliquer sur un projet → détail OK
-4. Login admin → dashboard OK
-5. Logout
-6. Vérifier l'OG image en partageant l'URL sur LinkedIn ou via opengraph.xyz
-7. Vérifier le sitemap : `https://leonheu.fr/sitemap.xml`
-8. Vérifier les logs Docker : `docker compose logs --tail 100 web`
+1. **Harness automatisé** : `cd web && SMOKE_BASE_URL=https://leonheu.fr
+   npm run test:smoke` → 8 checks **TF-WEB-01..08** (pages publiques, API
+   JSON, 404, en-têtes sécurité, garde `/admin`, spec OpenAPI). Exécuté
+   aussi par `deploy-prod.yml` si configuré.
+2. `curl -I https://leonheu.fr` → 200, HSTS présent
+3. Accueil → hero animé visible ; un projet → détail OK
+4. Login admin → dashboard → logout
+5. OG image (opengraph.xyz) + `sitemap.xml`
+6. Logs : `docker compose -f infra/docker-compose.prod.yml logs --tail 100 web`
 
 ### Critères de succès
 - ✅ Tous les points OK
 - ✅ Aucune erreur 5xx dans les logs
 
 ### En cas d'échec critique
-- Rollback immédiat (cf. `installation.md` § 6.3)
+- Rollback immédiat (cf. `deploiement-prod.md` § 8)
 - Investigation + correctif sur branche feature → nouvelle release
 
 ---
@@ -192,3 +195,40 @@ Fichier `Docs/claude/Sprint docs/sprint6-hardening-report.md` listant chaque ite
 | Postman ou curl | Tests API manuels | — |
 | Schema.org validator | Validation JSON-LD | https://validator.schema.org |
 | Twitter Card Validator | Validation OG Twitter | https://cards-dev.twitter.com/validator |
+
+---
+
+## 11. Check-list V1 complète (avant tag `v1.0.0`)
+
+### Qualité / CI
+- [ ] 3 jobs CI verts sur `develop` (lint+typecheck+Vitest+TF / E2E+axe+Lighthouse / mobile)
+- [ ] 147 TU + 14 TF + 16 E2E (web) + 10 jest (mobile) au vert
+- [ ] 0 `eslint-disable react-hooks` ; build OK (code retour, pas grep)
+- [ ] `npm audit` (étape CI) sans `high+` non traité ; Dependabot actif
+
+### Fonctionnel (recette J3/J6)
+- [ ] Vitrine : hero animé, nav, burger mobile, dark mode, reduced-motion
+- [ ] Projets : catalogue, filtres tags, détail, recherche (fuse.js)
+- [ ] CV (impression), About, Contact (`mailto:`)
+- [ ] Hub GitHub (ISR), API publique `/api/projects(+/[slug])` + 404
+- [ ] OpenAPI `/api/openapi` (3.1.0) + Scalar `/api/docs`
+- [ ] Admin : login, garde `/admin`, CRUD projets/articles, upload
+- [ ] Mobile : onglets, écrans, consommation API, share
+
+### Sécurité / a11y (J4)
+- [ ] En-têtes CSP/HSTS/X-Frame/nosniff/Referrer/Permissions présents
+- [ ] CSP stricte globale ; CSP élargie **uniquement** sur `/api/docs`
+- [ ] Upload magic-bytes ; auth anti-énumération ; rate limit
+- [ ] axe 0 serious/critical (5 pages) ; contraste AA ; NVDA déroulé
+- [ ] OWASP Top 10 revu (`pentest-owasp.md`) ; Observatory ≥ B (live)
+
+### Neutralité dépôt (consigne mainteneur)
+- [ ] Aucun détail d'infra dans le dépôt (hôte, registrar, IP, e-mail service)
+- [ ] `infra/.env` / secrets hors versionnement ; kit privé hors dépôt
+- [ ] `.gitignore` durci + `.gitattributes` (LF `*.sh`)
+
+### Release (J2/J6)
+- [ ] `sprint7-release.md` rédigé ; `dossier_final.md` finalisé
+- [ ] PR `develop → main` (merge commit) **CI verte vérifiée**
+- [ ] Tag `v1.0.0` + GitHub release ; M7 fermée
+- [ ] Étapes hôte (DNS, provisioning, sauvegarde système) documentées (mainteneur)

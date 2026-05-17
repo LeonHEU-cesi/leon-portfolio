@@ -300,6 +300,34 @@ npm rebuild sharp
 
 **Solution** : configurer `lighthouserc.cjs` avec `chromeFlags: ['--no-sandbox']` et budgets adaptés CI (LCP < 3s par ex.).
 
+### Problème : `Auth.js` → erreur `Configuration` (build / E2E)
+
+**Cause** : `AUTH_SECRET` absent. Auth.js v5 exige le secret même hors
+session réelle (parcours login/garde admin).
+
+**Solution** : définir `AUTH_SECRET` (`npx auth secret`) en local ; en CI
+le job E2E fournit un secret factice (`env.AUTH_SECRET`). `npm run build`
+sans secret échoue de façon non déterministe — toujours l'exporter avant
+`build`/`test:e2e`.
+
+### Problème : Prisma `P1001` / migration baseline déjà appliquée
+
+**Cause** : base existante sans table `_prisma_migrations`, ou DB injoignable.
+
+**Solution** :
+- DB déjà créée : `npx prisma migrate resolve --applied 20260516000000_init`
+- Sinon : `docker compose -f infra/docker-compose.dev.yml up -d` puis
+  `npx prisma migrate deploy && npx prisma db seed`
+- `next build` **sans** base fonctionne (import Prisma paresseux +
+  fallback mock) — c'est volontaire, pas une erreur.
+
+### Problème : scripts `infra/scripts/*.sh` cassés sur le serveur Linux
+
+**Cause** : conversion CRLF (Windows) → shebang `#!/usr/bin/env bash\r`.
+
+**Solution** : `.gitattributes` force déjà `*.sh` en LF. Si un script a
+été altéré : `git add --renormalize . && dos2unix infra/scripts/*.sh`.
+
 ### Problème : Sécurité — secret commit par erreur
 
 **Cause** : `.env` commit dans un commit feature.
@@ -326,9 +354,8 @@ npm rebuild sharp
 ## 9. Liens utiles
 
 - Production : https://leonheu.fr
-- Staging : https://staging.leonheu.fr
-- Storybook : https://storybook.leonheu.fr (Basic Auth)
-- API docs : https://leonheu.fr/api/docs
-- Repo : https://github.com/<username>/leon-portfolio
-- Issues : https://github.com/<username>/leon-portfolio/issues
-- Project Board : https://github.com/users/<username>/projects/<n>
+- API docs (OpenAPI / Scalar) : https://leonheu.fr/api/docs
+- API publique : https://leonheu.fr/api/projects
+- Dépôt : https://github.com/LeonHEU-cesi/leon-portfolio
+- Releases : https://github.com/LeonHEU-cesi/leon-portfolio/releases
+- Déploiement (générique) : `Docs/claude/leon-portfolio/deploiement-prod.md`
