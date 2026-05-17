@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -15,13 +15,15 @@ const P: FeaturedProject[] = [
 ];
 
 describe("<ProjectsSearch />", () => {
-  it("affiche toute la liste puis filtre à la saisie", async () => {
+  it("affiche toute la liste puis filtre à la saisie (fuse lazy async)", async () => {
     const user = userEvent.setup();
     render(<ProjectsSearch projects={P} />);
     expect(screen.getAllByRole("article")).toHaveLength(2);
 
     await user.type(screen.getByRole("searchbox"), "laravel");
-    expect(screen.getAllByRole("article")).toHaveLength(1);
+    await waitFor(() =>
+      expect(screen.getAllByRole("article")).toHaveLength(1),
+    );
     expect(screen.getByText("API Laravel")).toBeInTheDocument();
   });
 
@@ -29,7 +31,9 @@ describe("<ProjectsSearch />", () => {
     const user = userEvent.setup();
     render(<ProjectsSearch projects={P} />);
     await user.type(screen.getByRole("searchbox"), "zzzznomatch");
-    expect(screen.queryAllByRole("article")).toHaveLength(0);
-    expect(screen.getByRole("status")).toHaveTextContent(/aucun projet/i);
+    await waitFor(() => {
+      expect(screen.queryAllByRole("article")).toHaveLength(0);
+      expect(screen.getByRole("status")).toHaveTextContent(/aucun projet/i);
+    });
   });
 });

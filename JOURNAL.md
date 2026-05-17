@@ -1179,3 +1179,215 @@ Tests validés :
 - CI verte sur `develop` avant release
 
 ---
+
+## Sprint 6 — Hardening
+
+### Issue #154 — [6.1] Headers sécurité (CSP, HSTS, X-Frame-Options)
+
+- `lib/security-headers.ts` (pur) : `buildCsp()` (default/script/style/img/font/connect/frame-ancestors/base-uri/form-action/object-src) + `securityHeaders` (CSP, HSTS `max-age 63072000; includeSubDomains; preload`, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy)
+- `next.config.ts` : `headers()` applique à `/:path*` (import **relatif** — `@/` ne résout pas dans la config Next)
+- CSP V1 sans nonce (`'unsafe-inline'` style/script toléré Next/Tailwind ; durcissement nonce noté V2)
+
+Couvre US-TR-01.
+
+Tests validés :
+- `npm run test:run` → **132 tests passants** (130 + security-headers 2)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0 (headers appliqués, site non bloqué)
+
+---
+
+### Issue #155 — [6.2] Validation magic-bytes upload
+
+- `lib/upload.ts` : `sniffImageType(bytes)` (signatures JPEG/PNG/WebP) + `verifyMagicBytes(declaredType, bytes)` (purs)
+- `app/api/admin/upload/route.ts` : vérifie les 12 premiers octets vs type déclaré **avant** sharp → 400 si incohérent (défense au-delà du MIME annoncé)
+
+Couvre US-AD-06.
+
+Tests validés :
+- `npm run test:run` → **137 tests passants** (132 + upload-magic 5)
+- `npm run lint` / `npm run typecheck` / `npm run build` → exit 0
+
+---
+
+### Issue #156 — [6.3] Audit XSS rendu contenu
+
+Audit : le `content` projet/article est rendu en **texte échappé** par React (`whitespace-pre-line`), aucun `dangerouslySetInnerHTML` sur de l'input utilisateur (seul usage = QR SVG `ContactQrCode` depuis la lib `qrcode`, données = constantes → sûr).
+
+- `tests/unit/xss-content.test.tsx` : un `content` avec `<script>`/`<img onerror>` → aucun élément injecté, texte rendu échappé, pas d'exécution
+- Note V2 : sanitiser (DOMPurify/rehype) si rendu MDX un jour
+
+Couvre TS-INPUT-02.
+
+Tests validés :
+- `npm run test:run` → **138 tests passants** (137 + xss-content 1)
+- `npm run lint` / `npm run typecheck` → exit 0
+
+---
+
+### Issue #157 — [6.4] Pentest OWASP — rapport + tests sécu automatisés
+
+- `Docs/claude/leon-portfolio/pentest-owasp.md` : revue OWASP Top 10 2021 (A01..A10) appliquée au projet — statut + mitigations + durcissements reportés (CSP nonce, Dependabot, monitoring, pentest staging)
+- `tests/e2e/security.e2e.spec.ts` : en-têtes de sécurité (#6.1) servis sur `/` (CSP, X-Frame-Options DENY, nosniff, Referrer-Policy)
+
+Couvre TS-AUTH-* / TS-INPUT-*.
+
+Tests validés :
+- Local : `lint`/`typecheck`/`build` exit 0 ; `npm run test:e2e` → **8/8** (+ security headers)
+- **CI** : suite E2E bloquante verte (preuve sur la PR)
+
+---
+
+### Issue #158 — [6.5] Lighthouse CI config + budgets
+
+- Dép `@lhci/cli@^0.15`, script `lhci` (`lhci autorun`)
+- `web/lighthouserc.cjs` : collecte sur `npm run start` (5 URLs publiques), assertions **a11y/best-practices/seo ≥ 0.9 (error)**, **performance ≥ 0.8 (warn — runner CI variable)**, upload temporary-public-storage
+- `ci.yml` : step `npm run lhci` (sans `--if-present`), `continue-on-error` conservé (budgets informatifs ; le gate a11y dur = audit axe #6.8)
+
+Couvre TP-*.
+
+Tests validés :
+- `python yaml.safe_load(ci.yml)` valide ; `lint`/`typecheck`/`build` exit 0 ; 138 TU
+- **CI** : step Lighthouse exécuté (rapport généré, non bloquant)
+
+---
+
+### Issue #159 — [6.6] Optimisation perf : lazy-load fuse.js
+
+- `lib/project-search.ts` : `fuse.js` chargé en **import dynamique** (`await import`) → sort du bundle initial `/projets`, chargé seulement à la 1re recherche non vide. `searchProjects` devient async
+- `components/sections/ProjectsSearch.tsx` : effet async avec garde anti-stale ; **cas requête vide dérivé au rendu** (pas de `setState` synchrone → respecte `react-hooks/set-state-in-effect`, aucun `eslint-disable`)
+- Tests `project-search`/`ProjectsSearch` adaptés (async + `waitFor`)
+
+Couvre TP-* (code-splitting).
+
+Tests validés :
+- `npm run test:run` → **138 tests passants** ; `npm run lint`/`typecheck`/`build` → exit 0
+
+---
+
+### Issue #160 — [6.7] Suite E2E Playwright TE-01..05 consolidée
+
+- `tests/e2e/visitor.e2e.spec.ts` : TE-02 (accueil → CTA « Voir tous les projets » → `/projets`), TE-05 (route inconnue → 404, slug projet inconnu → 404)
+- Couverture TE complète : TE-01/03 (`projets.e2e`), TE-04 (`admin-login.e2e`), TE-02/05 (`visitor.e2e`), + security/cv-contact
+- Déterministe sans DB (fallback mock), scopé `<main>`
+
+Couvre TE-*.
+
+Tests validés :
+- Local : `lint`/`typecheck`/`build` exit 0 ; `npm run test:e2e` → **11/11**
+- **CI** : suite E2E bloquante verte (preuve sur la PR)
+
+---
+
+### Issue #161 — [6.8] Audit a11y axe + corrections contraste
+
+- Dép `@axe-core/playwright` ; `tests/e2e/a11y.e2e.spec.ts` : axe (wcag2a/2aa) sur /, /projets, /cv, /about, /contact → **0 violation serious/critical**, bloquant
+- `page.emulateMedia({ reducedMotion: 'reduce' })` : supprime les faux positifs des éléments animés (`opacity:0` whileInView lu avant entrée)
+- **Corrections contraste réelles** (`globals.css`) : `--secondary`/`--muted-fg` assombris en light / éclaircis en dark (4 palettes) ; `--accent` editorial-light et `--primary`/`--accent` tech-light assombris pour AA 4.5:1 sur surfaces claires
+- Audit manuel lecteur d'écran → #6.9
+
+Couvre TS-A11Y-*.
+
+Tests validés :
+- Local : `lint`/`typecheck`/`build` exit 0 ; `npm run test:run` **138** ; `npm run test:e2e` **16/16** (axe 5 inclus)
+- **CI** : suite E2E + axe bloquante verte (preuve sur la PR)
+
+---
+
+### Issue #162 — [6.9] Audit lecteur d'écran NVDA/VoiceOver — checklist
+
+Audit manuel (non automatisable) — livrable : checklist à dérouler par Léon, complète l'audit axe automatisé (#6.8).
+
+- `Docs/claude/leon-portfolio/a11y-screenreader.md` : méthode NVDA + checklist par page publique + points transverses + procédure de consignation
+- ⚠ Déroulé device/SR = étape Léon (comme #5.11/#6.12)
+
+Couvre TS-A11Y-03.
+
+Tests validés :
+- Doc cohérente avec les composants livrés (landmarks, aria, aria-live, role=img)
+
+---
+
+### Issue #163 — [6.10] OG images dynamiques + JSON-LD Person
+
+- `lib/json-ld.ts` (pur) : `personJsonLd()` (schema.org Person, données constantes)
+- `app/layout.tsx` : `<script type="application/ld+json">` (statique, pas d'input user → sûr cf. #6.3)
+- `app/opengraph-image.tsx` : OG marque (ImageResponse `next/og`, 1200×630, statique)
+- `app/projets/[slug]/opengraph-image.tsx` : OG par projet (titre+résumé via `getProjectBySlug` fallback, dynamique)
+
+Couvre US-TR-06.
+
+Tests validés :
+- `npm run test:run` → **139 tests passants** (138 + json-ld 1)
+- `npm run lint`/`typecheck` exit 0 ; `npm run build` → `/opengraph-image` `○`, `/projets/[slug]/opengraph-image` `ƒ`
+
+---
+
+### Issue #164 — [6.11] Workflow deploy-staging + compose + Dockerfile
+
+- `web/Dockerfile` (Next **standalone** multi-stage) + `next.config.ts` `output: "standalone"`
+- `infra/docker-compose.staging.yml` (web+postgres+caddy, env obligatoires gardés) + `infra/Caddyfile.staging` (TLS auto)
+- `.github/workflows/deploy-staging.yml` : push `develop` → SSH compose up + `migrate deploy` ; **gardé** (no-op propre si `STAGING_SSH_HOST` absent → pas d'échec CI ; non requis par branch protection)
+- `Docs/claude/leon-portfolio/deploiement-staging.md` : provisioning VM, secrets, DNS, run
+
+⏳ #165 [6.12] DNS `staging.leonheu.fr` + provisioning VM + secrets = **étape Léon** (issue ouverte, documentée §2/§3 du doc)
+
+Couvre infra Sprint 6.
+
+Tests validés :
+- YAML valides (ci.yml, deploy-staging.yml, compose ×2) ; `lint`/`typecheck` 0 ; **139 TU** ; `npm run build` → `.next/standalone` produit
+- `deploy-staging.yml` no-op vérifié (gate secrets) — n'impacte pas la CI requise
+
+---
+
+### Issue #165 — [6.12] DNS staging + certificat
+
+⚠ **Étape Léon** (registrar OVH + VM Proxmox + secrets GitHub) — non automatisable. Config livrée (#164). Issue **ouverte**, procédure documentée (`deploiement-staging.md` §2/§3, commentaire d'issue). Sprint timeboxé.
+
+---
+
+### Issue #166 — [6.13] MAJ Plan_developpement.md (versions réelles)
+
+Rattrapage dette : tableau stack du `Plan_developpement.md` réaligné sur les versions réellement installées (Next **16.2.6**, Prisma **6.19.3**, Storybook **10.4**, Vitest **4.1.6**, next-auth **v5-beta.31**, Expo **54**, reanimated 4, TanStack 5, jest-expo 55, @lhci/cli, @axe-core/playwright, sharp, fuse, qrcode) + lignes non implémentées marquées honnêtement (shadcn, RHF/Zod, axios, expo-secure-store, zod-to-openapi → V2/non utilisés) + mentions API publique / mobile / staging / sécurité. Résidus "Next.js 15" corrigés (prose + arborescence).
+
+Tests validés :
+- Cohérence avec le code et `project_stack` mémoire ; aucune version obsolète résiduelle
+
+---
+
+### Issue #167 — [6.14] Nettoyage composants template mobile inutilisés
+
+- Suppression (0 référence vérifiée) : `components/hello-wave.tsx`, `parallax-scroll-view.tsx`, `external-link.tsx`, `ui/collapsible.tsx`, `app/modal.tsx`
+- `app/_layout.tsx` : retrait du `Stack.Screen "modal"` (route orpheline)
+
+Tests validés :
+- `mobile` : 0 référence résiduelle ; `typecheck`/`lint` exit 0 ; `npm test` **10/10**
+
+---
+
+### Issue #168 — [6.15] Refactor des 3 eslint-disable react-hooks
+
+Dette soldée — suppression des 3 `eslint-disable react-hooks/set-state-in-effect` via patterns propres :
+
+- `lib/hooks/usePrefersReducedMotion.ts` → `useSyncExternalStore` (subscribe matchMedia, getSnapshot défensif, getServerSnapshot=false) — plus d'effet/setState
+- `lib/hooks/useHydrated.ts` (nouveau) → `useSyncExternalStore` (false serveur, true après hydratation) ; `ThemeToggle.tsx` consomme `useHydrated` (remplace le `mounted` state+effet)
+- `MobileMenu.tsx` → fermeture sur changement de route via **ajustement d'état pendant le rendu** (pattern React officiel) au lieu d'un effet
+- Test `usePrefersReducedMotion` réécrit pour le contrat `useSyncExternalStore` (mock `matches` partagé mutable)
+
+Tests validés :
+- `grep eslint-disable.*react-hooks` → **0** ; `npm run test:run` **139** ; `lint`/`typecheck`/`build` exit 0
+
+---
+
+### Issue #169 — [6.16] Sprint 6 review + release v0.7.0
+
+Clôture Sprint 6 (timeboxée — #6.12 DNS/staging en attente externe).
+
+- `Docs/claude/Sprint docs/sprint6-hardening.md` : 14/15 issues codables + PRs, décisions sécu/perf/a11y/SEO/infra, dette restante, métriques (139 TU / 16 E2E / 14 TF, 0 eslint-disable), DoD §9 (hors déploiement live), prépa Sprint 7, incident process branch-protection
+- PR `release: Sprint 6 - Hardening` develop→main (merge commit), tag `v0.7.0`, M6 fermée (timebox ; #165 ouverte documentée), `gh release`
+- Mémoire mise à jour
+
+Tests validés :
+- Récap conforme au format Sprint 5 ; toutes les issues codables Sprint 6 closed ; #165 explicitement externe
+- CI verte sur `develop` avant release
+
+---

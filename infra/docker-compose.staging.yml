@@ -1,0 +1,56 @@
+# Stack staging (VM Proxmox) : web Next + Postgres + Caddy.
+# Déploiement : voir Docs/claude/leon-portfolio/deploiement-staging.md
+# Lancement : docker compose -f infra/docker-compose.staging.yml up -d --build
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: leon-portfolio-postgres-staging
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?obligatoire}
+      POSTGRES_DB: ${POSTGRES_DB:-leonportfolio}
+    volumes:
+      - postgres-staging:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+    container_name: leon-portfolio-web-staging
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?obligatoire}
+      AUTH_SECRET: ${AUTH_SECRET:?obligatoire}
+      NEXT_PUBLIC_SITE_URL: https://staging.leonheu.fr
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: leon-portfolio-caddy-staging
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.staging:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - web
+
+volumes:
+  postgres-staging:
+  caddy-data:
+  caddy-config:

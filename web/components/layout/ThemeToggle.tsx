@@ -1,20 +1,16 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+
+import { useHydrated } from "@/lib/hooks/useHydrated";
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
   // Évite l'écart SSR/CSR : on attend l'hydratation pour afficher l'icône
   // qui dépend du thème résolu (light/dark/system).
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
-  }, []);
+  const hydrated = useHydrated();
 
-  if (!mounted) {
+  if (!hydrated) {
     return (
       <button
         type="button"

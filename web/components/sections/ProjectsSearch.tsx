@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { FeaturedProject } from "@/lib/data/featured-projects";
 import { searchProjects } from "@/lib/project-search";
@@ -8,18 +8,32 @@ import { searchProjects } from "@/lib/project-search";
 import { ProjectsListView } from "./ProjectsList";
 
 // Recherche client temps réel, complémentaire du filtre tags (serveur, URL).
-// Filtrage instantané (dataset portfolio réduit → pas de debounce nécessaire).
-// SSR : rendu initial = liste complète, donc dégradation propre sans JS.
+// `searchProjects` charge fuse.js paresseusement (#6.6) → effet async avec
+// garde anti-stale. SSR : rendu initial = liste complète (dégradation sans JS).
 export function ProjectsSearch({
   projects,
 }: {
   projects: ReadonlyArray<FeaturedProject>;
 }) {
   const [query, setQuery] = useState("");
-  const results = useMemo(
-    () => searchProjects(projects, query),
-    [projects, query],
-  );
+  const trimmed = query.trim();
+  const [searchResults, setSearchResults] = useState<
+    ReadonlyArray<FeaturedProject>
+  >([]);
+
+  useEffect(() => {
+    // Cas requête vide dérivé au rendu (pas de setState synchrone ici).
+    if (!trimmed) return;
+    let active = true;
+    searchProjects(projects, trimmed).then((r) => {
+      if (active) setSearchResults(r);
+    });
+    return () => {
+      active = false;
+    };
+  }, [projects, trimmed]);
+
+  const results = trimmed ? searchResults : projects;
 
   return (
     <div>

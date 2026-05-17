@@ -23,7 +23,8 @@
     "test:run:all": "vitest run",
     "test:tf": "vitest run --project tf",
     "test:e2e": "playwright test",
-    "test:storybook": "vitest run --project storybook"
+    "test:storybook": "vitest run --project storybook",
+    "lhci": "lhci autorun"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -41,7 +42,9 @@
     "sharp": "^0.34.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@chromatic-com/storybook": "^5.2.1",
+    "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.60.0",
     "@storybook/addon-a11y": "^10.4.0",
     "@storybook/addon-docs": "^10.4.0",

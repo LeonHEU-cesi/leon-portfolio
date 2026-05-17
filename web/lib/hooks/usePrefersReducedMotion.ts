@@ -1,35 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 const QUERY = "(prefers-reduced-motion: reduce)";
 
+function subscribe(callback: () => void): () => void {
+  if (typeof window === "undefined" || !window.matchMedia) {
+    return () => {};
+  }
+  const mql = window.matchMedia(QUERY);
+  mql.addEventListener("change", callback);
+  return () => mql.removeEventListener("change", callback);
+}
+
+function getSnapshot(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia(QUERY).matches;
+}
+
+function getServerSnapshot(): boolean {
+  return false;
+}
+
 /**
- * Détecte la préférence utilisateur `prefers-reduced-motion: reduce`.
- * Retourne `false` côté serveur (SSR-safe) et avant l'hydratation.
- * Met à jour en temps réel si l'utilisateur change la préférence OS.
+ * Détecte la préférence `prefers-reduced-motion: reduce`.
+ * `useSyncExternalStore` : SSR-safe (false serveur/avant hydratation),
+ * réactif, sans effet ni setState (cf. #6.15).
  *
  * Cf. US-VI-06 et `Docs/claude/leon-portfolio/Cahier_de_tests.md` TU-VI-02.
  */
 export function usePrefersReducedMotion(): boolean {
-  const [prefersReduced, setPrefersReduced] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) {
-      return;
-    }
-
-    const mediaQuery = window.matchMedia(QUERY);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPrefersReduced(mediaQuery.matches);
-
-    const handler = (event: MediaQueryListEvent) => {
-      setPrefersReduced(event.matches);
-    };
-
-    mediaQuery.addEventListener("change", handler);
-    return () => mediaQuery.removeEventListener("change", handler);
-  }, []);
-
-  return prefersReduced;
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
