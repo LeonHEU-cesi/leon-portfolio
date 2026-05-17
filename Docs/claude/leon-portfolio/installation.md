@@ -22,7 +22,7 @@
 
 ### 1.2 Comptes / accès
 
-- Compte GitHub avec accès au repo `<username>/leon-portfolio`
+- Compte GitHub avec accès au repo `LeonHEU-cesi/leon-portfolio`
 - Token GitHub PAT lecture publique pour l'API GitHub (cf. `.env.example`)
 - (Prod) Accès SSH au serveur cible
 
@@ -33,7 +33,7 @@
 ### 2.1 Cloner le repo
 
 ```bash
-git clone https://github.com/<username>/leon-portfolio.git
+git clone https://github.com/LeonHEU-cesi/leon-portfolio.git
 cd leon-portfolio
 ```
 
@@ -170,7 +170,7 @@ Le build produit `web/.next/standalone/` consommable par l'image Docker.
 
 ```bash
 # Depuis racine
-docker build -t ghcr.io/<username>/leon-portfolio-web:latest -f web/Dockerfile .
+docker build -t ghcr.io/LeonHEU-cesi/leon-portfolio-web:latest -f web/Dockerfile .
 ```
 
 ### 4.3 Build APK mobile
@@ -235,16 +235,12 @@ cd web && SMOKE_BASE_URL=https://leonheu.fr npm run test:smoke
 Les deux workflows sont **gardés** : no-op propre tant que les secrets
 `*_SSH_*` sont absents (non requis par la branch protection).
 
-### 6.3 Rollback manuel
+### 6.1 Rollback
 
-```bash
-ssh root@<vm-prod>
-cd /opt/leon-portfolio
-# Lister les versions disponibles
-docker images | grep leon-portfolio-web
-# Modifier docker-compose.yml ligne `image:` avec tag précédent
-docker compose up -d
-```
+`git checkout <tag_precedent>` puis `docker compose -f
+infra/docker-compose.prod.yml up -d --build` ; données via
+`infra/scripts/pg_restore.sh <dump>`. Procédure complète (générique) :
+[`deploiement-prod.md`](./deploiement-prod.md) § 8.
 
 ---
 
