@@ -22,7 +22,7 @@
 
 ### 1.2 Comptes / accès
 
-- Compte GitHub avec accès au repo `<username>/leon-portfolio`
+- Compte GitHub avec accès au repo `LeonHEU-cesi/leon-portfolio`
 - Token GitHub PAT lecture publique pour l'API GitHub (cf. `.env.example`)
 - (Prod) Accès SSH au serveur cible
 
@@ -33,7 +33,7 @@
 ### 2.1 Cloner le repo
 
 ```bash
-git clone https://github.com/<username>/leon-portfolio.git
+git clone https://github.com/LeonHEU-cesi/leon-portfolio.git
 cd leon-portfolio
 ```
 
@@ -170,7 +170,7 @@ Le build produit `web/.next/standalone/` consommable par l'image Docker.
 
 ```bash
 # Depuis racine
-docker build -t ghcr.io/<username>/leon-portfolio-web:latest -f web/Dockerfile .
+docker build -t ghcr.io/LeonHEU-cesi/leon-portfolio-web:latest -f web/Dockerfile .
 ```
 
 ### 4.3 Build APK mobile
@@ -235,16 +235,12 @@ cd web && SMOKE_BASE_URL=https://leonheu.fr npm run test:smoke
 Les deux workflows sont **gardés** : no-op propre tant que les secrets
 `*_SSH_*` sont absents (non requis par la branch protection).
 
-### 6.3 Rollback manuel
+### 6.1 Rollback
 
-```bash
-ssh root@<vm-prod>
-cd /opt/leon-portfolio
-# Lister les versions disponibles
-docker images | grep leon-portfolio-web
-# Modifier docker-compose.yml ligne `image:` avec tag précédent
-docker compose up -d
-```
+`git checkout <tag_precedent>` puis `docker compose -f
+infra/docker-compose.prod.yml up -d --build` ; données via
+`infra/scripts/pg_restore.sh <dump>`. Procédure complète (générique) :
+[`deploiement-prod.md`](./deploiement-prod.md) § 8.
 
 ---
 
@@ -300,6 +296,34 @@ npm rebuild sharp
 
 **Solution** : configurer `lighthouserc.cjs` avec `chromeFlags: ['--no-sandbox']` et budgets adaptés CI (LCP < 3s par ex.).
 
+### Problème : `Auth.js` → erreur `Configuration` (build / E2E)
+
+**Cause** : `AUTH_SECRET` absent. Auth.js v5 exige le secret même hors
+session réelle (parcours login/garde admin).
+
+**Solution** : définir `AUTH_SECRET` (`npx auth secret`) en local ; en CI
+le job E2E fournit un secret factice (`env.AUTH_SECRET`). `npm run build`
+sans secret échoue de façon non déterministe — toujours l'exporter avant
+`build`/`test:e2e`.
+
+### Problème : Prisma `P1001` / migration baseline déjà appliquée
+
+**Cause** : base existante sans table `_prisma_migrations`, ou DB injoignable.
+
+**Solution** :
+- DB déjà créée : `npx prisma migrate resolve --applied 20260516000000_init`
+- Sinon : `docker compose -f infra/docker-compose.dev.yml up -d` puis
+  `npx prisma migrate deploy && npx prisma db seed`
+- `next build` **sans** base fonctionne (import Prisma paresseux +
+  fallback mock) — c'est volontaire, pas une erreur.
+
+### Problème : scripts `infra/scripts/*.sh` cassés sur le serveur Linux
+
+**Cause** : conversion CRLF (Windows) → shebang `#!/usr/bin/env bash\r`.
+
+**Solution** : `.gitattributes` force déjà `*.sh` en LF. Si un script a
+été altéré : `git add --renormalize . && dos2unix infra/scripts/*.sh`.
+
 ### Problème : Sécurité — secret commit par erreur
 
 **Cause** : `.env` commit dans un commit feature.
@@ -326,9 +350,8 @@ npm rebuild sharp
 ## 9. Liens utiles
 
 - Production : https://leonheu.fr
-- Staging : https://staging.leonheu.fr
-- Storybook : https://storybook.leonheu.fr (Basic Auth)
-- API docs : https://leonheu.fr/api/docs
-- Repo : https://github.com/<username>/leon-portfolio
-- Issues : https://github.com/<username>/leon-portfolio/issues
-- Project Board : https://github.com/users/<username>/projects/<n>
+- API docs (OpenAPI / Scalar) : https://leonheu.fr/api/docs
+- API publique : https://leonheu.fr/api/projects
+- Dépôt : https://github.com/LeonHEU-cesi/leon-portfolio
+- Releases : https://github.com/LeonHEU-cesi/leon-portfolio/releases
+- Déploiement (générique) : `Docs/claude/leon-portfolio/deploiement-prod.md`
